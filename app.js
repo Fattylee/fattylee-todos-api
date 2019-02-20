@@ -1,11 +1,19 @@
 const express = require('express');
-
+const hbs = require('hbs');
 const app = express();
 
+app.set('view engine', 'hbs');
 app.use('/home', express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
   res.send('<p>welcome to the best app</h1>');
+});
+
+app.get('/news', (req, res) => {
+  res.render('news.hbs', {
+    pageTitle: 'News Page',
+    year: new Date().getFullYear(),
+  });
 });
 
 app.get('/about', (req, res) => {
