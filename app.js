@@ -4,10 +4,10 @@ const app = express();
 
 hbs.registerPartials(__dirname +'/views/partials');
 app.set('view engine', 'hbs');
-app.use('/home', express.static(__dirname + '/public'));
+app.use('/', express.static(__dirname + '/public'));
 
-app.get('/', (req, res) => {
-  res.send('<p>welcome to the best app</h1>');
+app.get('/home', (req, res) => {
+  res.send('<h1>Welcome to the best app</h1>');
 });
 
 app.get('/news', (req, res) => {
