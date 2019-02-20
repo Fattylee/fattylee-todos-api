@@ -2,6 +2,8 @@ const express = require('express');
 
 const app = express();
 
+app.use('/home', express.static(__dirname + '/public'));
+
 app.get('/', (req, res) => {
   res.send('<p>welcome to the best app</h1>');
 });
