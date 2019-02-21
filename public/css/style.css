@@ -5,3 +5,7 @@ body {
   background: #987575;
   color: #F2E05A;
 }
+
+ul.nav li {
+  list-style: none;
+}
