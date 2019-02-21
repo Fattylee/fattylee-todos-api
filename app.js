@@ -27,12 +27,15 @@ app.use((req, res, next) => {
   next();
 });
 
+/*
 app.use((req, res, next) => {
   res.render('maintenance.hbs', {
     message: 'Maintenance is ongoing, We will be write back.',
     pageTitle: 'Maintenance page',
   });
-})
+});
+*/
+
 app.use('/', express.static(__dirname + '/public'));
 
 
