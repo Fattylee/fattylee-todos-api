@@ -1,5 +1,8 @@
 const express = require('express');
 const hbs = require('hbs');
+const fs = require('fs');
+
+
 const app = express();
 
 hbs.registerPartials(__dirname +'/views/partials');
@@ -13,7 +16,20 @@ hbs.registerHelper('capitalizeIt', (words) => {
 });
 
 app.set('view engine', 'hbs');
+
+app.use((req, res, next) => {
+  const log = `${new Date().toString()} ${req.method} ${req.url}`;
+  fs.appendFile('note.log', log + '\n\n', ((error) => {
+    if (error)
+    console.log('Something went wrong. can\'t add log');
+  }));
+  console.log(`${log}`);
+  next();
+});
+
 app.use('/', express.static(__dirname + '/public'));
+
+
 
 hbs.registerHelper('getCurrentYear', () => {
   return new Date().getFullYear();
