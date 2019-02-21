@@ -7,9 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js"
   },
+  "dependencies": {
+    "express": "^4.16.4",
+    "hbs": "^4.0.2"
+  },
   "devDependencies": {
-    "express": "@4.16.4",
-    "hbs": "@4.0.2"
+    "nodemon": "1.18.10"
   },
   "keywords": [],
   "author": "",
