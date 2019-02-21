@@ -4,15 +4,16 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "test": "mocha **/*.test.js",
+    "start": "nodemon app.js -e js,hbs,css,html"
   },
   "dependencies": {
     "express": "^4.16.4",
     "hbs": "^4.0.2"
   },
   "devDependencies": {
-    "nodemon": "1.18.10"
+    "nodemon": "1.18.10",
+    "mocha": "6.0.1"
   },
   "keywords": [],
   "author": "",
