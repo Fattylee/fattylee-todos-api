@@ -3,12 +3,22 @@ const hbs = require('hbs');
 const app = express();
 
 hbs.registerPartials(__dirname +'/views/partials');
+
+hbs.registerHelper('capitalizeIt', (words) => {
+  return (
+    words.split(/\s+/ig)
+    .map(word => word[0].toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+  );
+});
+
 app.set('view engine', 'hbs');
 app.use('/', express.static(__dirname + '/public'));
 
 hbs.registerHelper('getCurrentYear', () => {
   return new Date().getFullYear();
 });
+
 
 app.get('/home', (req, res) => {
   res.render('home.hbs');
