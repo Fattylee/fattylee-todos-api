@@ -7,7 +7,7 @@ app.set('view engine', 'hbs');
 app.use('/', express.static(__dirname + '/public'));
 
 app.get('/home', (req, res) => {
-  res.send('<h1>Welcome to the best app</h1>');
+  res.render('home.hbs', {year: new Date().getFullYear()});
 });
 
 app.get('/news', (req, res) => {
@@ -28,6 +28,14 @@ app.get('/about', (req, res) => {
     pageTitle: 'About page',
     year: new Date().getFullYear(),
   });
+});
+
+app.get('*', (req, res) => {
+  res.render('404.hbs', {
+    address: req.url.slice(1),
+    pageTitle: '404 page',
+    year: new Date().getFullYear()
+  })
 });
 
 const port = process.env.PORT || 4000;
