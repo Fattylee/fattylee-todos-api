@@ -4,8 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "mocha **/*.test.js",
-    "start": "nodemon app.js -e js,hbs,css,html"
+    "test": "mocha **/*.test.js -w",
+    "start:dev": "nodemon app.js -e js,hbs,css,html",
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "^4.16.4",
