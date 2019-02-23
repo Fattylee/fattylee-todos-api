@@ -18,12 +18,12 @@ it('should add two numbers', () => {
   }
 });
 
-it('Should not take a number', () => {
-  const a = '4', b=9;
+it('Should not take a number as the first argument', () => {
+  const a = {}, b=9;
   const res = math.sum(a, b);
   
   if(res !== `Expected a 'number' but got a '${typeof a}'`) {
-    throw new Error(`does not expected a 'number' but got a '${typeof a}'`);
+    throw new Error(`does not expect 'number' as the first argument but got a '${typeof a}'`);
   }
 });
 

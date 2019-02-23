@@ -8,7 +8,7 @@ module.exports.sum = (a, b) => {
   else if (a <= 0) {
     return 'Expected first number to be greater than zero but got ' + a;
   }
-	return a + b;
+	return a + b ;
 };
 
 module.exports.square = (num) => num * num;
