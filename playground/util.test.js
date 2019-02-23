@@ -69,4 +69,11 @@ it('should set firstName and lastName', () => {
   .toBeA('object')
   .toEqual(userObj)
   .toBe(userObj);
+});
+
+it('should add two numbers asynchronously', (done) => {
+  util.asyncSum(3,4, (res) => {
+    expect(res).toBe(7);
+    done();
+  })
 })

@@ -19,3 +19,9 @@ module.exports.setName = (user, fullName) => {
 
   return user;
 };
+
+module.exports.asyncSum = (a,b, callBack) => {
+  setTimeout(() => {
+    callBack(a + b);
+  }, 1500);
+};
