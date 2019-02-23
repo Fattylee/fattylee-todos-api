@@ -4,7 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "mocha **/*.test.js",
+    "test": "mocha **/*.test.js -w",
+    "test:watch": "nodemon --exec \"npm run test:mocha\"",
+    "test:mocha": "mocha **/*.test.js",
     "start:dev": "nodemon app.js -e js,hbs,css,html",
     "start": "node app.js"
   },
@@ -14,7 +16,8 @@
   },
   "devDependencies": {
     "nodemon": "1.18.10",
-    "mocha": "6.0.1"
+    "mocha": "6.0.1",
+    "expect": "1.20.2"
   },
   "keywords": [],
   "author": "",
