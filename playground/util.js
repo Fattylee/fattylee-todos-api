@@ -20,8 +20,16 @@ module.exports.setName = (user, fullName) => {
   return user;
 };
 
+module.exports.promiseSum = (a,b) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+    resolve(a + b);
+  }, 500); // End setTimeout
+  }); // End Promise
+};
+
 module.exports.asyncSum = (a,b, callBack) => {
   setTimeout(() => {
     callBack(a + b);
-  }, 1500);
+  }, 1000);
 };

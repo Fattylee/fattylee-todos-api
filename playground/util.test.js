@@ -36,22 +36,18 @@ it('Should not take a number as the second argument', () => {
 });
 
 it('Should take a number less than or equal zero as the first argument', () => {
-  const a = -5, b=-78;
+  const a = -5, b=78;
   const res = util.sum(a, b);
   
-  if(res !== 'Expected first number to be greater than zero but got ' + a) {
-    throw new Error('Expected first number to be less than zero but got ' + a);
-  }
+  // expect(a).toBeLessThanOrEqualTo(0)
+  expect(res).toBe('Expected first number to be greater than zero but got ' + a);
+ 
 });
 
 it('Should square a number', () => {
   const num = 5;
   const res = util.square(num);
-  expect(res).toBe(25).toBeA('number')
-  /*
-  if (res !== 25) {
-    throw new Error('Expect 25, but got ' + res);
-  }*/
+  expect(res).toBe(25).toBeA('number');
 });
 
 it('should set firstName and lastName', () => {
@@ -70,6 +66,16 @@ it('should set firstName and lastName', () => {
   .toEqual(userObj)
   .toBe(userObj);
 });
+
+it('should sum two numbers using promiseSum', (done) => {
+  util.promiseSum(4,5)
+    .then((res) => {
+      expect(res).toBe(9);
+       done();
+    })
+    .catch(console.log);
+ 
+})
 
 it('should add two numbers asynchronously', (done) => {
   util.asyncSum(3,4, (res) => {
