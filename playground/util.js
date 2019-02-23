@@ -12,3 +12,10 @@ module.exports.sum = (a, b) => {
 };
 
 module.exports.square = (num) => num * num;
+
+module.exports.setName = (user, fullName) => {
+  user.firstName = fullName.split(' ')[0];
+  user.lastName = fullName.split(' ')[1];
+
+  return user;
+};
