@@ -2,10 +2,11 @@ const express = require('express');
 const hbs = require('hbs');
 const fs = require('fs');
 
+const utils = require('./helpers/utils');
 
 const app = express();
 
-hbs.registerPartials(__dirname +'/views/partials');
+hbs.registerPartials(__dirname + utils.filePath(__dirname, '/views/partials'));
 
 hbs.registerHelper('capitalizeIt', (words) => {
   return (
@@ -36,7 +37,7 @@ app.use((req, res, next) => {
 });
 */
 
-app.use('/', express.static(__dirname + '/public'));
+app.use('/', express.static(__dirname + utils.filePath(__dirname,'/public')));
 
 
 
