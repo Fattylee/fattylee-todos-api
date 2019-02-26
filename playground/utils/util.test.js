@@ -1,8 +1,28 @@
 const util = require('./util');
 const expect = require('expect');
 
+describe('Test asyncSum', () => {
+  it('should sum two numbers using promiseSum', (done) => {
+  util.promiseSum(4,5)
+    .then((res) => {
+      expect(res).toBe(9);
+       done();
+    })
+    .catch(console.log);
+ 
+});
 
-it('should add two numbers', () => {
+it('should add two numbers asynchronously', (done) => {
+  util.asyncSum(3,4, (res) => {
+    expect(res).toBe(7);
+    done();
+  })
+});
+
+});
+
+describe('Test sum of numbers', () => {
+  it('should add two numbers', () => {
   
   const a = 4, b = 5;
   const res = util.sum(a,b);
@@ -44,6 +64,9 @@ it('Should take a number less than or equal zero as the first argument', () => {
  
 });
 
+});
+
+
 it('Should square a number', () => {
   const num = 5;
   const res = util.square(num);
@@ -67,19 +90,7 @@ it('should set firstName and lastName', () => {
   .toBe(userObj);
 });
 
-it('should sum two numbers using promiseSum', (done) => {
-  util.promiseSum(4,5)
-    .then((res) => {
-      expect(res).toBe(9);
-       done();
-    })
-    .catch(console.log);
- 
-})
 
-it('should add two numbers asynchronously', (done) => {
-  util.asyncSum(3,4, (res) => {
-    expect(res).toBe(7);
-    done();
-  })
+describe('Baba whats up', () => {
+  
 })
