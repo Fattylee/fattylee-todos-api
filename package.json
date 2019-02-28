@@ -14,7 +14,9 @@
   "dependencies": {
     "express": "^4.16.4",
     "hbs": "^4.0.2",
-    "mongodb": "3.1.13"
+    "mongodb": "3.1.13",
+    "faker": "4.1.0",
+    "mongoose": "5.4.16"
   },
   "devDependencies": {
     "nodemon": "1.18.10",
