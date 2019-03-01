@@ -10,14 +10,16 @@
     "start:dev": "nodemon app.js -e js,hbs,css,html",
     "start": "node app.js",
     "start:mongodb": "nodemon playground/mongodb-practice/mongodb.js",
-    "start:mongoose": "nodemon playground/mongoose-practice/mongoose.js"
+    "start:mongoose": "nodemon playground/mongoose-practice/mongoose.js",
+    "start:server": "nodemon server/server.js"
   },
   "dependencies": {
     "express": "^4.16.4",
     "hbs": "^4.0.2",
     "mongodb": "3.1.13",
     "faker": "4.1.0",
-    "mongoose": "5.4.16"
+    "mongoose": "5.4.16",
+    "body-parser": "1.18.3"
   },
   "devDependencies": {
     "nodemon": "1.18.10",

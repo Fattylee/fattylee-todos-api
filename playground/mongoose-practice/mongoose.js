@@ -41,7 +41,7 @@ const User = mongoose.model('Users', {
 });
 
 const newUser = new User({
-  email: ' fattylee.remod@gmail.com   ',
+  email: ' fattylee.remod@gmail.comls   ',
 });
 
 newUser.save()
