@@ -7,6 +7,7 @@
     "test": "mocha **/*.test.js -w",
     "test:watch": "nodemon --exec \"npm run test:mocha\"",
     "test:mocha": "mocha **/*.test.js",
+    "test:server": "nodemon --exec mocha ./server/test/server.test.js ",
     "start:dev": "nodemon app.js -e js,hbs,css,html",
     "start": "node app.js",
     "start:mongodb": "nodemon playground/mongodb-practice/mongodb.js",
