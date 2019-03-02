@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
@@ -24,6 +25,7 @@ app.get('/todos', (req, res) => {
     },
     
     err => console.log(err));
+    
 });
 
 app.post('/todos', (req, res) => {
