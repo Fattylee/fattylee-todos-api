@@ -20,6 +20,8 @@ app.get('/', (req, res) => {
 
 app.get('/todos', (req, res) => {
   Todo.find()
+    .sort('text')
+    .select('text -_id')
     .then(docs => {
       res.status(200).send(docs);
     },
