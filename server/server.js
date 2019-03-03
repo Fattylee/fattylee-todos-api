@@ -16,7 +16,39 @@ app.use(bodyParser.urlencoded({ extended: true}));
 
 
 app.get('/', (req, res) => {
-  res.status(200).send('<h1>Welcome to my Todo App, Have fun!</h1>');
+  res.status(200).send(`
+<html>
+<head>
+<title>Todo Api Docs</title>
+<style type="text/css">
+ul {
+margin: 0;
+padding: 0;
+list-style: none;
+}
+li {
+padding : 10px ;
+}
+li span {
+background : red ;
+color: white ;
+display: inline-block ;
+padding: 5px 10px ;
+margin-right: 10px;
+
+}
+</style>
+</head>
+<body>
+<h1 style="background: purple;color:white;padding:20px;">Welcome to my Todo App, Have fun!</h1>
+<h2>Api Docs</h2>
+<ul>
+	<li><span>GET /</span>	get all todos</li>
+	<li><span>GET /todos/todoId</span>  get a todo by ID</li>
+	<li><span>POST /todos</span> create a todo</li>
+</ul>
+</body>
+</html>`);
 });
 
 app.get('/todos/:id', (req, res) => {
