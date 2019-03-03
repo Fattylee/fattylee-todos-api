@@ -1,13 +1,38 @@
 # node-web-service
 
+Fattylee-web-services is a web application for keeping track of one's todo. which support all `CRUD` operations.
+
 ## learn everything about NODEJS
 
+You will learn so much about `RESTfUL API's. Just switch to any commit to experiment and learn what is in that `commit`. have fun as ever!
+
+##Installation
+
+node:
+
+```shell
+$ npm install
+```
 ## API Docs 
- `servers/server.js`
- `Get /` home page
- `GET /todos/todoID` get a todo by ID
- `GET /todos` get all todos
- `POST /todos` create a todos
+
+path:
+
+ `./servers/server.js`
  
+ ```js
+ Get / home page
+ ```
+ 
+ ```js
+ GET /todos/todoID get a todo by ID
+ ```
+ 
+ ```js
+ GET /todos` get all todos
+ ```
+ 
+ ```js
+ POST /todos` create a todos
+ ```
  
  
