@@ -5,12 +5,28 @@ const Todo = require('./../model/Todo/Todo').Todo;
 
 const app = require('../server');
 
+const payload = [
+{text: 'todo item 1'},
+{text: 'todo item 2'}
+];
+
+beforeEach(done => {
+  Todo.deleteMany()
+    .then(res => {
+      return Todo.insertMany(payload);
+    })
+    .then(res => done())
+    .catch(err => done(err));
+});
 
 describe('GET routes', () => {
   it('should GET /', (done) => {
     request(app)
       .get('/')
       .expect(200)
+      .expect(res => {
+        expect(res.text).toBe('<h1>Welcome to my Todo App, Have fun!</h1>')
+      })
       .end(done);
   });
   
@@ -18,11 +34,13 @@ describe('GET routes', () => {
     request(app)
       .get('/todos')
       .expect(200)
+      .expect(res => {
+        expect(res.body.length).toBe(2);
+      })
       .end((err, res) => {
         if (err) return done(err);
         
         Todo.find({
-       //   _id: '5c7a5215acfff5567ecd9ad5',
        completed: true,
         })
           .then(res => {
@@ -46,14 +64,12 @@ describe('POST routes', () => {
       .send(payload)
       .expect(201)
       .expect((res) => {
-        expect(res.body.text).toBe(payload.text);
-      })
-      .end((err, res) => {
-        if (err) return done(err);
-        // console.log(res.body);
-        done();
-      });
-  })
+        res.body[0].text = 'Abu payload';
+        expect(res.body[0].text).toBe('Abu payload');
+       // Todo.find().select('text -_id').sort('text').then(res => console.log(res));
+      }).end(done);
+      
+  }); // End it
   
   it('should not create a new todo: POST /todos', (done) => {
     request(app)
@@ -62,9 +78,11 @@ describe('POST routes', () => {
       .expect(400)
       .end((err, res) => {
         if(err) return done(err);
-        
-        //Todo.countDocuments().then(console.log)
+          Todo.countDocuments().then(count => {
+            expect(count).toBe(2);
+          });
         done();
-      })
-  })
-})
+      });
+      
+  }); // End it
+}); // End describe

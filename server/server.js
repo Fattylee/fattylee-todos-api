@@ -31,13 +31,13 @@ app.get('/todos', (req, res) => {
 });
 
 app.post('/todos', (req, res) => {
-  const newTodo = new Todo({
+  Todo.insertMany({
     text: req.body.text,
     completed: req.body.completed,
     completedAt: req.body.completedAt
-  });
+  })
   
-  newTodo.save()
+
     .then(doc => {
       res.status(201).send(doc);
     })
