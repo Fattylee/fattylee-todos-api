@@ -30,6 +30,21 @@ describe('GET routes', () => {
       .end(done);
   });
   
+  it('should get a todo by id: GET /todos/id', (done) => {
+    Todo.insertMany([{text: 'coding is d next level'}]).then(res => {
+      const id = res[0]._id;
+    request(app)
+      .get(`/todos/${id}`)
+      .expect(200)
+      .then(todo => {
+        //console.log(todo)
+        done();
+      })
+      .catch(err => done(err));
+    }).catch(err => done(err));
+     
+  });
+  
   it('should get all todos GET /todos', (done) => {
     request(app)
       .get('/todos')
