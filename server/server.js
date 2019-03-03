@@ -12,7 +12,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true}));
-app.use(require('../helpers/utils').logger);
+// app.use(require('../helpers/utils').logger);
 
 
 app.get('/', (req, res) => {
@@ -22,11 +22,11 @@ app.get('/', (req, res) => {
 app.get('/todos/:id', (req, res) => {
   const {id} = req.params;
   
-  if(!ObjectID.isValid(id)) return res.status(404).send('Invalid todo id:' + id);
+  if(!ObjectID.isValid(id)) return res.status(404).json({ message: 'Invalid todo id:' + id});
   
   Todo.findById(id)
     .then(todo => {
-      if(!todo) return res.status(404).json({ message: 'todo item not found: ' + id});
+      if(!todo) return res.status(404).send({ message: 'todo item not found: ' + id});
       
       res.status(200).send({todo});
     })

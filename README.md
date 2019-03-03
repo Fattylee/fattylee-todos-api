@@ -13,6 +13,12 @@ node:
 ```shell
 $ npm install
 ```
+start:
+
+```shell
+$ npm start
+```
+
 ## API Docs 
 
 path:

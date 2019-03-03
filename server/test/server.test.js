@@ -21,7 +21,8 @@ beforeEach(done => {
 });
 
 describe('GET routes', () => {
-  it('should GET /', (done) => {
+  describe('Home page route GET /', () => {
+    it('should GET /', (done) => {
     request(app)
       .get('/')
       .expect(200)
@@ -30,21 +31,10 @@ describe('GET routes', () => {
       })
       .end(done);
   });
-  
-  it('should get a todo by id: GET /todos/id', (done) => {
-      const id = payload[0]._id.toHexString(); // no need to convert ObjectID to string using .toHexString() method
-     
-    request(app)
-      .get(`/todos/${id}`)
-      .expect(200)
-      .then(todo => {
-        expect(todo.body.todo.text).toBe(payload[0].text);
-        done();
-    }).catch(err => done(err));
-     
   });
   
-  it('should get all todos GET /todos', (done) => {
+  describe('GET /todos', () => {
+    it('should get all todos GET /todos', (done) => {
     request(app)
       .get('/todos')
       .expect(200)
@@ -65,7 +55,54 @@ describe('GET routes', () => {
           .catch(err => done(err));
        
       })
-  })
+  });
+  });
+  
+  describe('GET /todos/:id', _ => {
+    
+  it('should get a todo by id: GET /todos/id', (done) => {
+      const id = payload[0]._id.toHexString(); // no need to convert ObjectID to string using .toHexString() method
+     
+    request(app)
+      .get(`/todos/${id}`)
+      .expect(200)
+      .then(todo => {
+        expect(todo.body.todo.text).toBe(payload[0].text);
+        done();
+    }).catch(err => done(err));
+     
+  });
+  
+  
+  it('should return 404 for invalid id: GET /todos/123', done => {
+    request(app)
+      .get('/todos/123')
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('Invalid todo id:123');
+        done();
+      });
+  });
+  
+  it('should return 404 for todo not in the db: GET /todos/invalidID', done => {
+    const validId = payload[0]._id;
+    let invalidID = validId.toString();
+    invalidID = invalidID.slice(0, invalidID.length - 3) + '123';
+    
+    // const hexId = new ObjectID();
+    
+    request(app)
+      .get('/todos/' + invalidID)
+      .expect(404)
+      .expect(res => {
+        expect(res.body.message).toBe('todo item not found: ' + invalidID);
+      })
+      .end(done);
+  });
+  });
+
+  
 })
 
 describe('POST routes', () => {
