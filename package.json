@@ -8,7 +8,9 @@
     "start:server": "nodemon server/server.js",
     "start": "node server/server.js"
   },
-  "engines": "11.10.0",
+  "engines": {
+    "node": "11.10.0"
+  },
   "dependencies": {
     "express": "^4.16.4",
     "hbs": "^4.0.2",
