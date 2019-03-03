@@ -1,13 +1,14 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 const Todo = require('./../model/Todo/Todo').Todo;
 
 
 const app = require('../server');
 
 const payload = [
-{text: 'todo item 1'},
-{text: 'todo item 2'}
+{text: 'todo item 1', _id: new ObjectID()},
+{text: 'todo item 2',  _id: new ObjectID()}
 ];
 
 beforeEach(done => {
@@ -31,16 +32,14 @@ describe('GET routes', () => {
   });
   
   it('should get a todo by id: GET /todos/id', (done) => {
-    Todo.insertMany([{text: 'coding is d next level'}]).then(res => {
-      const id = res[0]._id;
+      const id = payload[0]._id.toHexString(); // no need to convert ObjectID to string using .toHexString() method
+     
     request(app)
       .get(`/todos/${id}`)
       .expect(200)
       .then(todo => {
-        //console.log(todo)
+        expect(todo.body.todo.text).toBe(payload[0].text);
         done();
-      })
-      .catch(err => done(err));
     }).catch(err => done(err));
      
   });
