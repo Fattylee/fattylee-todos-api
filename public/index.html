@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name='viewport' content='width=device-width, initial-s>cale=1.0' />
+<title>Todo Api Docs</title>
+<link href="./css/animate.css" rel="stylesheet">
+<style type="text/css">
+
+body {
+  background: #457A91;
+  color: white;
+  margin:0;
+}
+.container {
+border: 1px solid white;
+margin: 20px auto ;
+margin-bottom: 150px;
+padding : 20px ;
+width: 80%;
+}
+h1 {
+background: purple ;
+color: white ;
+padding: 20px ;
+}
+
+ul {
+margin: 0;
+padding: 0;
+list-style: none;
+}
+li {
+padding : 10px 0;
+}
+li span {
+background : red ;
+color: white ;
+display: inline-block ;
+padding: 5px 10px ;
+margin-right: 10px;
+}
+.home-footer {
+background:#0A344D ;
+height: 100px ;
+position : fixed ;
+bottom: 0;
+width: 100%;
+box-sizing: border-box;
+
+}
+.home-footer p {
+padding: 20px ;
+}
+</style>
+</head>
+<body>
+<div class="container animated bounceInDown ">
+  
+  <h1 class="animated  bounceInUp delay-1s">Welcome to my Todo App, Have fun!</h1>
+  
+  <h2 class="animated rollIn delay-2s">Api Docs</h2>
+  
+  <ul class="animated zoomIn delay-3s">
+  	<li><span>GET /todos</span>	get all todos</li>
+  	<li><span>GET /todos/todoId</span>  get a todo by ID</li>
+  	<li><span>POST /todos</span> create a todo</li>
+  </ul>
+</div>
+
+<footer class="home-footer animated slideInUp delay-4s">
+	<p>Created by Fattylee, Copyright&copy; <span id="year"></span>. </p>
+</footer>
+
+<script type="text/javascript">
+const year = document. querySelector("#year");
+year. textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

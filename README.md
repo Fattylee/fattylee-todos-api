@@ -26,19 +26,19 @@ path:
  `./servers/server.js`
  
  ```js
- Get / home page
+ Get /  home page for Api Docs
  ```
  
  ```js
- GET /todos/todoID get a todo by ID
+ GET /todos/todoID  get a todo by ID
  ```
  
  ```js
- GET /todos` get all todos
+ GET /todos  get all todos
  ```
  
  ```js
- POST /todos` create a todos
+ POST /todos  create a todos
  ```
  
  

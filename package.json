@@ -5,7 +5,7 @@
   "main": "server/server.js",
   "scripts": {
     "test": "nodemon --exec mocha ./server/test/server.test.js ",
-    "start:server": "nodemon server/server.js",
+    "start:server": "nodemon server/server.js -e html,css",
     "start": "node server/server.js"
   },
   "engines": {
@@ -17,7 +17,8 @@
     "mongodb": "3.1.13",
     "faker": "4.1.0",
     "mongoose": "5.4.16",
-    "body-parser": "1.18.3"
+    "body-parser": "1.18.3",
+    "animate.css": "3.7.0"
   },
   "devDependencies": {
     "nodemon": "1.18.10",

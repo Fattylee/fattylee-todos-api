@@ -1,3 +1,4 @@
+const homePage = require('./homepage');
 const filePath = (dir, path) => {
   return (
     dir.includes('\\') ? path.replace(/\//g, '\\') : path
@@ -13,4 +14,5 @@ const logger = (req, res, next) => {
 module.exports = {
   filePath,
   logger,
+  homePage,
 }
