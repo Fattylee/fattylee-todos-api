@@ -40,7 +40,7 @@ app.get('/todos', (req, res) => {
     .sort('text')
     //.select('text -_id')
     .then(docs => {
-      res.status(200).send(docs);
+      res.status(200).send({todos: docs});
     },
     
     err => console.log(err));
@@ -56,7 +56,7 @@ app.post('/todos', (req, res) => {
   
 
     .then(doc => {
-      res.status(201).send(doc);
+      res.status(201).send(doc[0]);
     })
     .catch(err => {
       res.status(400).send(err);
