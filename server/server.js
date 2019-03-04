@@ -53,14 +53,26 @@ app.post('/todos', (req, res) => {
     completed: req.body.completed,
     completedAt: req.body.completedAt
   })
-  
-
     .then(doc => {
       res.status(201).send(doc[0]);
     })
     .catch(err => {
       res.status(400).send(err);
     })
+});
+
+app.delete('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  
+  if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
+  
+  Todo.findByIdAndDelete(id)
+    .then(doc => {
+      if(!doc) return res.status(404).send({message: 'Todo not found'});
+      
+      res.status(200).send(doc)
+    })
+    .catch(err => console.log(err));
 })
 
 const port = process.env.PORT ||  4000;
