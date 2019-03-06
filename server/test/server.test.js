@@ -26,9 +26,6 @@ describe('GET routes', () => {
     request(app)
       .get('/')
       .expect(200)
-      .expect(res => {
-        expect(res.text).toBe('<h1>Welcome to my Todo App, Have fun!</h1>')
-      })
       .end(done);
   });
   });
@@ -39,7 +36,7 @@ describe('GET routes', () => {
       .get('/todos')
       .expect(200)
       .expect(res => {
-        expect(res.body.length).toBe(2);
+        expect(res.body.todos.length).toBe(2);
       })
       .end((err, res) => {
         if (err) return done(err);
@@ -115,9 +112,8 @@ describe('POST routes', () => {
       .send(payload)
       .expect(201)
       .expect((res) => {
-        res.body[0].text = 'Abu payload';
-        expect(res.body[0].text).toBe('Abu payload');
-       // Todo.find().select('text -_id').sort('text').then(res => console.log(res));
+        res.body.text = 'Abu payload';
+        expect(res.body.text).toBe('Abu payload');
       }).end(done);
       
   }); // End it
@@ -137,3 +133,45 @@ describe('POST routes', () => {
       
   }); // End it
 }); // End describe
+
+describe('DELETE route', () => {
+  describe('DELETE /todos/id', () => {
+    it('should delete a todo: DELETE /todos/id', (done) => {
+      const { _id } = payload[0];
+      request(app)
+        .delete('/todos/' + _id)
+        .expect(200)
+        .end((err, res) => {
+          if(err) return done(err);
+          
+          expect(res.body._id).toBe(_id.toString());
+          done();
+        });
+    });
+    
+    it('should not delete a todo with invalidID: DELETE /todos/id', (done) => {
+      request(app)
+        .delete('/todos/123')
+        .expect(400)
+        .end((err, res) => {
+          if(err) return done(err);
+          
+          expect(res.body.message).toBe('Invalid todo id');
+          done();
+        });
+    });
+    
+    it('should not delete a todo for a todo not in the db: DELETE /todos/id', (done) => {
+      const _id = new ObjectID();
+      request(app)
+        .delete('/todos/' + _id)
+        .expect(404)
+        .end((err, res) => {
+          if(err) return done(err);
+          
+          expect(res.body.message).toBe('Todo not found');
+          done();
+        });
+    });
+  });
+});

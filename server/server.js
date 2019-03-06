@@ -3,15 +3,18 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const {ObjectID} = require('mongodb');
 
+
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
+const { logger, validate } = require('./../helpers/utils');
 
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true}));
+app.use(logger);
 
 /*
 app.use('/', (req, res, next) => {
@@ -40,7 +43,7 @@ app.get('/todos', (req, res) => {
     .sort('text')
     //.select('text -_id')
     .then(docs => {
-      res.status(200).send(docs);
+      res.status(200).send({todos: docs});
     },
     
     err => console.log(err));
@@ -53,15 +56,53 @@ app.post('/todos', (req, res) => {
     completed: req.body.completed,
     completedAt: req.body.completedAt
   })
-  
-
     .then(doc => {
-      res.status(201).send(doc);
+      res.status(201).send(doc[0]);
     })
     .catch(err => {
       res.status(400).send(err);
     })
-})
+});
+
+app.delete('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  
+  if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
+  
+  Todo.findByIdAndDelete(id)
+    .then(doc => {
+      if(!doc) return res.status(404).send({message: 'Todo not found'});
+      
+      res.status(200).send(doc)
+    })
+    .catch(err => res.send(err));
+});
+
+app.patch('/todos/:id', (req, res) => {
+  
+  validate(req.body)
+  .then(result => {
+    
+  const { id } = req.params;
+  
+   if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
+   
+   req.body.completedAt = 0;
+   console.log(req.body);
+   if(req.body.completed) {
+     req.body.completedAt = new Date().getTime();
+   }
+   
+  
+  Todo.findOneAndUpdate({_id: id}, req.body, {new: true})
+    .then(doc => {
+      res.status(200).send({todo: doc});
+    })
+    .catch(err => res.send(err));
+  })
+  .catch(err => res.status(400).send({message: 'Invalid input', error: err.details}));
+});
+
 
 const port = process.env.PORT ||  4000;
 
