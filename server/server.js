@@ -8,7 +8,7 @@ const {ObjectID} = require('mongodb');
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
-const { logger, validate } = require('./../helpers/utils');
+const { logger, validate, formatError } = require('./../helpers/utils');
 
 
 const app = express();
@@ -70,7 +70,10 @@ app.post('/todos', (req, res) => {
       res.status(400).send(err);
     })
   })
-  .catch( err => res.status(400).send(err.details[0].message))
+  .catch( err => {
+    const error = formatError(err); 
+    res.status(400).send(error)
+  })
   
 });
 
@@ -113,7 +116,12 @@ app.patch('/todos/:id', (req, res) => {
     })
     .catch(err => res.send(err));
   })
-  .catch(err => res.status(400).send({message: 'Invalid input', error: err.details}));
+  .catch(err => {
+    
+    const error = formatError(err);
+    
+    res.status(400).send(error);
+    });
 });
 
 
