@@ -7,7 +7,7 @@ const Todo = require('./../model/Todo/Todo').Todo;
 const app = require('../server');
 
 const payload = [
-{text: 'todo item 1', _id: new ObjectID()},
+{text: 'todo item 1', _id: new ObjectID(), completed: true, completedAt: Date.now() },
 {text: 'todo item 2',  _id: new ObjectID()}
 ];
 
@@ -174,3 +174,68 @@ describe('DELETE route', () => {
     });
   });
 });
+
+describe('PATCH route', () => {
+  describe('PATCH /todos/id', () => {
+    it('should update a todo succesdully: PATCH /todos/id', (done) => {
+      request(app)
+        .patch('/todos/' + payload[0]._id)
+        .send({ completed: true, text: 'visit the masjid by 12noon' })
+        .expect(200)
+        .end((err, res) => {
+          if(err) return done(err);
+          
+          expect(res.body.todo.completed).toBeTruthy();
+          expect(res.body.todo.text).toMatch(/VISIT/i);
+          expect(res.body.todo.completedAt).toBeGreaterThan(0);
+          done();
+        })
+    })
+    
+    it('should return 404 for invalid todoId: PATCH /todos/123', (done) => {
+      request(app)
+        .patch('/todos/123')
+        .expect(400)
+        .then(res => {
+          expect(res.body.message).toContain('Invalid');
+          expect(null).toBeNull();
+          done();
+        })
+        .catch( err => done(err));
+    });
+    
+    it('should return 404 for todoId that is not in the db: PATCH /todos/id', (done) => {
+      request(app)
+        .patch('/todos/' + new ObjectID().toHexString())
+        .expect(404)
+        .expect( res => {
+          expect(res.body.message).toMatch(/not found/);
+        })
+        .end(done);
+    });
+    
+    it('should clear completedAt when todo is not completed', (done) => {
+      request(app)
+        .patch('/todos/' + payload[0]._id)
+        .send({ completed: false })
+        .expect(200)
+        .expect( res => {
+          expect(res.body.todo.completedAt).toBe(null);
+        })
+        .end(done);
+    });
+    
+    it('should return completedAt greater than zero when todo is completed', (done) => {
+      request(app)
+        .patch('/todos/' + payload[0]._id)
+        .send({ completed: true })
+        .expect(200)
+        .expect( res => {
+          expect(res.body.todo.completedAt).toBeGreaterThan(0);
+        })
+        .end(done);
+    });
+    
+    
+  })
+})
