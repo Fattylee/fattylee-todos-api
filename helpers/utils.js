@@ -16,9 +16,9 @@ const logger = (req, res, next) => {
 const validate = (body) => {
 const schema = Joi.object().keys({
   
-  text: Joi.string().trim().min(5).required(),
+  text: Joi.string().trim().min(5),
   
-  completed: Joi.boolean().required(),
+  completed: Joi.boolean(),
 
 //    username: Joi.string().alphanum().min(3).max(30).required(),
 
