@@ -143,8 +143,7 @@ describe('DELETE route', () => {
         .expect(200)
         .end((err, res) => {
           if(err) return done(err);
-          
-          expect(res.body._id).toBe(_id.toString());
+           expect(res.body._id).toBe(_id.toString());
           done();
         });
     });

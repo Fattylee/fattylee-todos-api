@@ -107,7 +107,7 @@ app.patch('/todos/:id', (req, res) => {
    }
    
   
-  Todo.findOneAndUpdate({_id: id}, req.body, {new: true})
+  Todo.findOneAndUpdate({_id: id}, req.body, {useFindAndModify: false, new: true})
     .then(doc => {
       
       if(!doc) return res.status(400).send({ message: 'Todo not found'});
