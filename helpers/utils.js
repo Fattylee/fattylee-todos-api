@@ -16,21 +16,9 @@ const logger = (req, res, next) => {
 const validate = (body) => {
 const schema = Joi.object().keys({
   
-  text: Joi.string().trim().min(5).required(),
+  text: Joi.string().trim().min(5),
   
-  completed: Joi.boolean().required(),
-
-//    username: Joi.string().alphanum().min(3).max(30).required(),
-
-   // password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
-
-  //  access_token: [Joi.string().required(), Joi.number().required()],
-
-  //  birthyear: Joi.number().integer().min(1900).max(2013),
-
-  //  age: Joi.number().required().min(18).max(99),
-
-    //email: Joi.string().email({ minDomainAtoms: 2 })
+  completed: Joi.boolean(),
 
 })//.with('username', 'birthyear')
 //.without('password', 'text');
@@ -38,10 +26,21 @@ const schema = Joi.object().keys({
 return Joi.validate(body, schema);
 };
 
-
+const formatError = (err) => {
+  const pass = err.details.length > 1;
+    let error = { message: err.details[0].message };
+    if(pass) {
+      
+       error = err.details.map(e =>( {message: e.message }));
+       return {message: 'Invalid input', error};
+      }
+      
+      return {message: 'Invalid input', error};
+}
 
 module.exports = {
   filePath,
   logger,
   validate,
+  formatError,
 }

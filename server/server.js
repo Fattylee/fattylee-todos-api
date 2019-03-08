@@ -1,20 +1,23 @@
+require('./config/config');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const Joi = require('joi');
 const {ObjectID} = require('mongodb');
 
 
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
-const { logger, validate } = require('./../helpers/utils');
+const { logger, validate, formatError } = require('./../helpers/utils');
 
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true}));
-app.use(logger);
+//app.use(logger);
 
 /*
 app.use('/', (req, res, next) => {
@@ -51,10 +54,16 @@ app.get('/todos', (req, res) => {
 });
 
 app.post('/todos', (req, res) => {
-  Todo.insertMany({
+  
+  Joi.validate(
+    req.body,
+    Joi.object().keys({text: Joi.string().min(5).trim().required()}))
+  .then( value => {
+    
+    Todo.insertMany({
     text: req.body.text,
-    completed: req.body.completed,
-    completedAt: req.body.completedAt
+    completed: false,
+    completedAt: null
   })
     .then(doc => {
       res.status(201).send(doc[0]);
@@ -62,6 +71,12 @@ app.post('/todos', (req, res) => {
     .catch(err => {
       res.status(400).send(err);
     })
+  })
+  .catch( err => {
+    const error = formatError(err); 
+    res.status(400).send(error)
+  })
+  
 });
 
 app.delete('/todos/:id', (req, res) => {
@@ -86,25 +101,33 @@ app.patch('/todos/:id', (req, res) => {
   const { id } = req.params;
   
    if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
+   if(req.body.completed === false)
+     req.body.completedAt = null;
    
-   req.body.completedAt = 0;
-   console.log(req.body);
    if(req.body.completed) {
      req.body.completedAt = new Date().getTime();
    }
    
   
-  Todo.findOneAndUpdate({_id: id}, req.body, {new: true})
+  Todo.findOneAndUpdate({_id: id}, req.body, {useFindAndModify: false, new: true})
     .then(doc => {
+      
+      if(!doc) return res.status(404).send({ message: 'Todo not found'});
+      
       res.status(200).send({todo: doc});
     })
     .catch(err => res.send(err));
   })
-  .catch(err => res.status(400).send({message: 'Invalid input', error: err.details}));
+  .catch(err => {
+    
+    const error = formatError(err);
+    
+    res.status(400).send(error);
+    });
 });
 
 
-const port = process.env.PORT ||  4000;
+const port = process.env.PORT;
 
 app.listen(port, () => console.log('Server running on port', port));
 

@@ -4,8 +4,8 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
-    "test": "nodemon --exec mocha ./server/test/server.test.js ",
-    "start:server": "nodemon server/server.js -e js,html,css",
+    "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec mocha ./server/test/server.test.js ",
+    "start:server": "export NODE_ENV=development || SET \"NODE_ENV=development\" && nodemon server/server.js -e js,html,css",
     "start": "node server/server.js"
   },
   "engines": {
@@ -24,7 +24,7 @@
   "devDependencies": {
     "nodemon": "1.18.10",
     "mocha": "6.0.1",
-    "expect": "1.20.2",
+    "expect": "24.3.0",
     "supertest": "2.0.0"
   },
   "keywords": [],

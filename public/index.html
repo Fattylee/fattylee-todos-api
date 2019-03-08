@@ -51,6 +51,8 @@ box-sizing: border-box;
 .home-footer p {
 padding: 20px ;
 }
+
+span.animated { animation-delay: 7s }
 </style>
 </head>
 <body>
@@ -61,9 +63,10 @@ padding: 20px ;
   <h2 class="animated rollIn delay-2s">Api Docs</h2>
   
   <ul class="animated zoomIn delay-3s">
-  	<li><span>GET /todos</span>	get all todos</li>
-  	<li><span>GET /todos/todoId</span>  get a todo by ID</li>
-  	<li><span>POST /todos</span> create a todo</li>
+  	<li><span class="animated infinite heartBeat">GET /todos</span>	get all todos</li>
+  	<li><span class="animated infinite pulse">GET /todos/todoId</span>  get a todo by ID</li>
+  	<li><span class="animated infinite flash">POST /todos</span> create a todo</li>
+  	<li><span class="animated infinite shake slower">PATCH /todos/todoId</span> update a todo</li>
   </ul>
 </div>
 
