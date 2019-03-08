@@ -1,3 +1,5 @@
+require('./config/config');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -125,7 +127,7 @@ app.patch('/todos/:id', (req, res) => {
 });
 
 
-const port = process.env.PORT ||  4000;
+const port = process.env.PORT;
 
 app.listen(port, () => console.log('Server running on port', port));
 

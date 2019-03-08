@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
+require('./config/config');
 
 mongoose.Promise = global.Promise;
 
-mongoose.connect(process.env.MONGOLAB_URI || 'mongodb://127.0.0.1/TodoApp', { useNewUrlParser: true })
+mongoose.connect(process.env.MONGOLAB_URI, { useNewUrlParser: true })
   .then( res => console.log('Connected to mongodb successfully'))
   .catch( err => console.log('Unable to connect to mongodb:', err));
 
