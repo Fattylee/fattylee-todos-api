@@ -128,12 +128,19 @@ app.patch('/todos/:id', (req, res) => {
 
 app.post('/users', (req, res) => {
   Joi.validate(req.body, Joi.object().keys({
-    email: Joi.string().email({ minDomainAtoms: 2 }).min(5).required(),
-    password: Joi.string().min(4).required(),
+    email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).required(),
+    password: Joi.string().trim().min(4).required(),
     tokens:[Joi.object()],
   }))
   .then( value => {
-    const { email, password, tokens } = req.body;
+    //return res.send({value, body: req.body});
+    const { email, password, tokens } = value;
+    User.findOne({ email: { $regex: new RegExp(email, 'i')}})
+    .then(findUser => {
+      if(findUser)
+      return res.status(409).send({message: 'email already exist'});
+      
+      
     const user = new User({
       email,
       password,
@@ -146,18 +153,26 @@ app.post('/users', (req, res) => {
         return res.status(201).send({ user: doc});
       })
       .catch( err => {
-        if(err.errmsg.includes('duplicate key error'))
+        if(err.errmsg && err.errmsg.includes('duplicate key error'))
           return res.status(409).send({message: "email already exist"});
         
         res.status(400).send(err);
       })
+      
+      
+    }).catch(err => res.send(err));
+    
   })
   .catch( err => {
-    
-          
     res.status(400).send(formatError(err));
   });
   
+});
+
+app.delete('/users', (req, res) => {
+  User.deleteMany().then(() => {
+    res.send({ message: 'all users deleted'});
+  })
 })
 
 
