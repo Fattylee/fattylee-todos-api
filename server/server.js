@@ -128,7 +128,7 @@ app.patch('/todos/:id', (req, res) => {
 
 app.post('/users', (req, res) => {
   Joi.validate(req.body, Joi.object().keys({
-    email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).required(),
+    email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
     password: Joi.string().trim().min(4).required(),
     tokens:[Joi.object()],
   }))
@@ -168,6 +168,15 @@ app.post('/users', (req, res) => {
   });
   
 });
+
+app.get('/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).send({ users});
+  } catch (err) {
+    res.send(err);
+  }
+})
 
 app.delete('/users', (req, res) => {
   User.deleteMany().then(() => {
