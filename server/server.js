@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const Joi = require('joi');
 const {ObjectID} = require('mongodb');
+const path = require('path');
 
 
 const mongoose = require('./mongoose');
@@ -26,7 +27,7 @@ app.use('/', (req, res, next) => {
   res.send('<h1>Website is under maintenance</h1>');
 })*/
 
-app.use('/', express.static('./public'));
+app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
 
 app.get('/todos/:id', (req, res) => {
@@ -177,6 +178,19 @@ app.delete('/users', (req, res) => {
   })
 })
 
+app.all('*', (req, res) => {
+ res.status(200).redirect('/404_error-web')
+});
+
+app.post('/test', async (req, res) => {
+  try {
+    const user = new User(req.body);
+    const userFromServer = await user.save();
+    return res.send({user, userFromServer});
+  } catch( err ) {
+    res.send({err});
+  }
+})
 
 const port = process.env.PORT;
 
