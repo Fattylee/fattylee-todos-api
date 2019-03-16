@@ -1,4 +1,4 @@
- const pass = true;
+ let pass = true;
  
  const promise1 = () => (
    new Promise((resolve, reject) => {
@@ -14,17 +14,21 @@
    })
  );
  
+ let data1;
+ // promise call
  promise1()
    .then( data => {
      console.log('Promise 1 data:', data);
      
-     promise2(data)
-       .then( data2 => {
-         console.log('Promise 2 data resolved', data, data2);
-       })
-       .catch( err => console.log('ERROR 2:', err));
+     //pass = false;
+     data1 = data;
+     return promise2(data)
    })
-   .catch( err => console.log('ERROR 1:', err));
+    .then( data2 => {
+      try { throw new Error('HI HERE');} catch(err) {console.log(err)}
+         console.log('Promise 2 data resolved',data1, data2);
+   })
+   .catch( err => console.log('ERROR:', err));
    
    
    
