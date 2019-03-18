@@ -27,15 +27,10 @@ return Joi.validate(body, schema);
 };
 
 const formatError = (err) => {
-  const pass = err.details.length > 1;
-    let error = { message: err.details[0].message };
-    if(pass) {
-      
-       error = err.details.map(e =>( {message: e.message }));
-       return {message: 'Invalid input', error};
-      }
-      
-      return {message: 'Invalid input', error};
+  
+  const message = 'Invalid input';
+  const error = err.details.map(e =>( {message: e.message }));
+       return {message, error};
 }
 
 module.exports = {
