@@ -131,17 +131,18 @@ app.patch('/todos/:id', (req, res) => {
 
 app.post('/users', async (req, res) => {
   try {
-    const body = await Joi.validate(req.body, Joi.object().keys({
+    /*const body = await Joi.validate(req.body, Joi.object().keys({
     email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
     password: Joi.string().trim().min(4).required(),
     tokens:[Joi.object()],
-  }));
+  }));*/
   
-  const { email, password, tokens } = body;
-    const findUser = await User.findOne({ email: { $regex: new RegExp(email, 'i')}});
+  const { email, password, tokens } = req.body;
+    const userExist = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i')}});
     
-    if(findUser)
-      return res.status(409).send({message: 'email already exist'});
+    //return res.send({email, password, tokens});
+    
+    //if(userExist) return res.status(409).send({message: 'email already exist'});
       
     const user = new User({
       email,
@@ -150,13 +151,20 @@ app.post('/users', async (req, res) => {
     });
     
     const doc = await user.save();
-    return res.status(201).send({ user: doc});
-    H
-  } catch( err ) {
-    //return res.send(err);
+    //const token = await user.generateAuthToken();
+    return res.status(201).send({ user, doc, token });
+  } 
+  catch( err ) {
+    
+    console.log('err', err);
+    return res.send({err});
     if(err.errmsg && err.errmsg.includes('duplicate key error'))
     return res.status(409).send({message: "email already exist"});
     
+     //return non Joi error
+  if(!err.details) 
+  return res.send({err});
+  
     res.status(400).send(formatError(err));
   }
   
@@ -178,8 +186,45 @@ app.delete('/users', (req, res) => {
   })
 })
 
-app.all('*', (req, res) => {
- res.status(200).redirect('/404_error-web')
+app.all('/papa', (req, res) => {
+  const createUser = async () => {
+    const value = await Joi.validate(req.body, Joi.object().options({ abortEarly: false }).keys({
+      email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
+      password: Joi.string().trim().min(4).required(),
+      tokens:[Joi.object().keys({
+        access: Joi.string().required(),
+        token: Joi.string().required()
+      })],
+    })).catch( err => { throw ('something went wrong', err) });
+    
+    const { email, password, tokens = [{
+      access: 'my-access',
+      token: '5262gsgsg'
+    }] } = value;
+    const user = new User({email, password, tokens});
+    
+    const emailExist = await User.findOne({ email }).catch( err => { throw err });
+    
+    
+    if(emailExist) throw { message: 'email already exist', statusCode: 409 };
+    
+    const newUser = await user.save().catch( err => { throw err });
+    
+    return newUser;
+    
+    
+  }
+  
+  createUser()
+    .then( val => {
+      res.status(201).send(val);
+    })
+    .catch( err => {
+      if(err.details) return res.status(400).send(formatError(err));
+      
+    res.status(err.statusCode || 500 ).send(err.message || err );
+  });
+ //res.status(200).redirect('/404_error-web')
 });
 
 app.post('/test', async (req, res) => {
