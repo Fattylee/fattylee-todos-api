@@ -26,6 +26,19 @@ const schema = Joi.object().keys({
 return Joi.validate(body, schema);
 };
 
+const validateUser = (body) =>
+  (
+  Joi.validate(body, Joi.object().options({ abortEarly: false }).keys({
+        email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
+        password: Joi.string().trim().min(4).required(),
+        /*
+        tokens:[Joi.object().keys({
+          access: Joi.string().required(),
+          token: Joi.string().required()
+        })],
+        */
+      }))
+    );
 const formatError = (err) => {
   
   const message = 'Invalid input';
@@ -38,4 +51,5 @@ module.exports = {
   logger,
   validate,
   formatError,
+  validateUser,
 }
