@@ -5,7 +5,7 @@
   "main": "server/server.js",
   "scripts": {
     "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec mocha ./server/test/server.test.js ",
-    "start:server": "export NODE_ENV=development || SET \"NODE_ENV=development\" && nodemon server/server.js -e js,html,css",
+    "start:server": "nodemon server/server.js -e js,html,css",
     "start": "node server/server.js"
   },
   "engines": {
@@ -19,7 +19,10 @@
     "mongoose": "5.4.16",
     "body-parser": "1.18.3",
     "animate.css": "3.7.0",
-    "joi": "14.3.1"
+    "joi": "14.3.1",
+    "validator": "10.11.0",
+    "crypto-js": "3.1.9-1",
+    "jsonwebtoken": "8.5.0"
   },
   "devDependencies": {
     "nodemon": "1.18.10",

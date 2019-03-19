@@ -1,23 +1,22 @@
+const app = require('../server');
+
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
 const Todo = require('./../model/Todo/Todo').Todo;
 
 
-const app = require('../server');
-
 const payload = [
 {text: 'todo item 1', _id: new ObjectID(), completed: true, completedAt: Date.now() },
 {text: 'todo item 2',  _id: new ObjectID()}
 ];
 
-beforeEach(done => {
-  Todo.deleteMany()
-    .then(res => {
-      return Todo.insertMany(payload);
-    })
-    .then(res => done())
-    .catch(err => done(err));
+beforeEach(async () => {
+  try {
+    await Todo.deleteMany();
+    await Todo.insertMany(payload);
+  } catch( err ) { }
+ 
 });
 
 describe('GET routes', () => {

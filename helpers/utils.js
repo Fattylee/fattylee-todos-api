@@ -26,16 +26,24 @@ const schema = Joi.object().keys({
 return Joi.validate(body, schema);
 };
 
+const validateUser = (body) =>
+  (
+  Joi.validate(body, Joi.object().options({ abortEarly: false }).keys({
+        email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
+        password: Joi.string().trim().min(4).required(),
+        /*
+        tokens:[Joi.object().keys({
+          access: Joi.string().required(),
+          token: Joi.string().required()
+        })],
+        */
+      }))
+    );
 const formatError = (err) => {
-  const pass = err.details.length > 1;
-    let error = { message: err.details[0].message };
-    if(pass) {
-      
-       error = err.details.map(e =>( {message: e.message }));
-       return {message: 'Invalid input', error};
-      }
-      
-      return {message: 'Invalid input', error};
+  
+  const message = 'Invalid input';
+  const error = err.details.map(e =>( {message: e.message }));
+       return {message, error};
 }
 
 module.exports = {
@@ -43,4 +51,5 @@ module.exports = {
   logger,
   validate,
   formatError,
+  validateUser,
 }

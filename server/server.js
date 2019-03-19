@@ -5,26 +5,29 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const Joi = require('joi');
 const {ObjectID} = require('mongodb');
+const path = require('path');
 
 
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
-const { logger, validate, formatError } = require('./../helpers/utils');
+const { logger, validate, formatError, validateUser} = require('./../helpers/utils');
 
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true}));
-//app.use(logger);
+
+if(require('./config/config') === 'development')
+app.use(logger);
 
 /*
 app.use('/', (req, res, next) => {
   res.send('<h1>Website is under maintenance</h1>');
 })*/
 
-app.use('/', express.static('./public'));
+app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
 
 app.get('/todos/:id', (req, res) => {
@@ -124,6 +127,58 @@ app.patch('/todos/:id', (req, res) => {
     
     res.status(400).send(error);
     });
+});
+
+app.get('/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    users.reverse();
+    res.status(200).send({ users});
+  } catch (err) {
+    res.send(err);
+  }
+})
+
+app.delete('/users', (req, res) => {
+  User.deleteMany().then(() => {
+    res.send({ message: 'all users deleted'});
+  })
+})
+
+app.post('/users', (req, res) => {
+  
+  const createUser = async () => {
+    const value = await validateUser(req.body).catch( err => { throw err });
+    
+    const { email } = value;
+    const user = new User(value);
+    
+    const emailExist = await User.findOne({ email }).catch( err => { throw err });
+    
+    if(emailExist) throw { message: 'email already exist', statusCode: 409 };
+    
+    const newUser = await user.generateAuthUser().catch( err => { throw err });
+    return newUser;
+  };
+  
+  createUser()
+    .then( ({ id, email, tokens:[{token}] }) => {
+    
+      res.status(201).header('x-auth', token).send({ id, email });
+    })
+    .catch( err => {
+      fs.appendFile('error.log', JSON.stringify(err, null, 2) + '\n===========', (err) => console.log('error saved'));
+      
+      if(err.details) return res.status(400).send(formatError(err));
+      
+    res.status(err.statusCode || 500 ).send(err.message || err );
+  });
+});
+
+
+app.all('*', (req, res) => {
+  
+ res.status(200).redirect('/404_error-web')
 });
 
 
