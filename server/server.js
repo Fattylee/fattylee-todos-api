@@ -143,11 +143,10 @@ app.delete('/users', (req, res) => {
   User.deleteMany().then(() => {
     res.status(200).send({ message: 'all users deleted'});
   }).catch( err => { console.error(err); })
-})
+});
 
-app.post('/users', (req, res) => {
-  
-  const createUser = async () => {
+app.post('/users', async (req, res) => {
+  try {
     const value = await validateUser(req.body).catch( err => { throw err });
     
     const { email } = value;
@@ -158,23 +157,19 @@ app.post('/users', (req, res) => {
     if(emailExist) throw { message: 'email already exist', statusCode: 409 };
     
     const newUser = await user.generateAuthUser().catch( err => { throw err });
-    return newUser;
-  };
   
-  createUser()
-    .then( ({ id, email, tokens:[{token}] }) => {
-    
-      res.status(201).header('x-auth', token).send({ id, email });
-    })
-    .catch( err => {
+  const { _id: id, tokens: [{token}] } = newUser;
+  
+  res.status(201).header('x-auth', token).send({ id, email });
+    }
+    catch ( err ) {
       fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err); });
       
       if(err.details) return res.status(400).send(formatError(err));
       
     res.status(err.statusCode || 500 ).send({error: err.message || err });
-  });
+    }
 });
-
 
 app.all('*', (req, res) => {
   
