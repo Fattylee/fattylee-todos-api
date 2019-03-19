@@ -38,7 +38,14 @@ path:
  ```
  
  ```js
- POST /todos  create a todos
+ POST /todos  create a todo
  ```
  
+  ```js
+ GET /users  get all users 
+ ```
+ 
+ ```js
+ POST /users  create a user
+ ```
  
