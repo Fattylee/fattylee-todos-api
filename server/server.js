@@ -141,8 +141,8 @@ app.get('/users', async (req, res) => {
 
 app.delete('/users', (req, res) => {
   User.deleteMany().then(() => {
-    res.send({ message: 'all users deleted'});
-  })
+    res.status(200).send({ message: 'all users deleted'});
+  }).catch( err => { console.error(err); })
 })
 
 app.post('/users', (req, res) => {
@@ -167,11 +167,11 @@ app.post('/users', (req, res) => {
       res.status(201).header('x-auth', token).send({ id, email });
     })
     .catch( err => {
-      fs.appendFile('error.log', JSON.stringify(err, null, 2) + '\n===========', (err) => console.log('error saved'));
+      fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err); });
       
       if(err.details) return res.status(400).send(formatError(err));
       
-    res.status(err.statusCode || 500 ).send(err.message || err );
+    res.status(err.statusCode || 500 ).send({error: err.message || err });
   });
 });
 

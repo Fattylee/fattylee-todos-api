@@ -1,9 +1,11 @@
 const app = require('../server');
+const jwt = require('jsonwebtoken');
 
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
 const Todo = require('./../model/Todo/Todo').Todo;
+const User = require('./../model/User/User').User;
 
 
 const payload = [
@@ -11,11 +13,27 @@ const payload = [
 {text: 'todo item 2',  _id: new ObjectID()}
 ];
 
+const userPayload = [
+  { 
+  __v: 0,
+  email: 'abc@gmail.com',
+  password: '12344671',
+  _id: new ObjectID(),
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: new ObjectID(), access: 'auth'}, 'mamama12'),
+    _id: new ObjectID(),
+    }]  
+  }
+];
+
 beforeEach(async () => {
   try {
-    await Todo.deleteMany();
-    await Todo.insertMany(payload);
-  } catch( err ) { }
+    await Todo.deleteMany().catch( err => { throw err });
+    await User.deleteMany().catch( err => { throw err });
+    await Todo.insertMany(payload).catch( err => { throw err });
+    await User.insertMany(userPayload).catch( err => { throw err });
+  } catch( err ) { console.error(err); }
  
 });
 
@@ -97,11 +115,26 @@ describe('GET routes', () => {
       .end(done);
   });
   });
+  
+  describe('GET /users', () => {
+    it('should get all users: GET /users', (done) => {
+      request(app)
+        .get('/users')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.users.length).toBe(1);
+          //expect(res.body.users[0].tokens).toEqual(expect.arrayContaining(userPayload[0].tokens));
+          
+        })
+        .end(done);
+    })
+  })
 
   
 })
 
 describe('POST routes', () => {
+  describe('POST /todos', () => {
   it('should create a todo: POST /todos', (done) => {
     const payload = {
       text: 'look for kali-termux'
@@ -126,12 +159,93 @@ describe('POST routes', () => {
         if(err) return done(err);
           Todo.countDocuments().then(count => {
             expect(count).toBe(2);
-          });
+          }).catch( err => done(err));
         done();
       });
       
   }); // End it
-}); // End describe
+  }); // End describe todos
+  describe('POST /users', () => {
+    it('should create a user: POST /users', (done) => {
+    const payload = {
+      email: 'absc@yahoo.COM',
+      password: 'password12',
+    };
+    request(app)
+      .post('/users')
+      .send(payload)
+      .expect(201)
+      .end((err, res) => {
+        if(err) return done(err);
+       
+       expect(res.header['x-auth']).toBeTruthy(); expect(res.body.email).toBe('absc@yahoo.com');
+        
+         User.find().then( data => {
+           expect(data.length).toBe(2);
+           done();
+         }).catch( err => done(err));
+      });
+  }); // End it
+  it('should not create a new user when payload is empty: POST /users', (done) => {
+    request(app)
+      .post('/users')
+      .send({})
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+        
+        expect(res.body.message).toBe('Invalid input');
+        expect(res.body.error.length).toBe(2);
+          User.countDocuments().then(count => {
+            expect(count).toBe(1);
+            done();
+          }).catch( err => done(err));
+      });
+      
+  }); // End it
+  it('should not create a new user when email is invalid: POST /users', (done) => {
+    const payload = { 
+    email: 'abcgmail.com',
+    password: '1235gsvs',
+    };
+    request(app)
+      .post('/users')
+      .send(payload)
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+        
+        expect(res.body.message).toBe('Invalid input');
+        expect(res.body.error[0].message).toMatch('must be a valid email')
+        expect(res.body.error.length).toBe(1);
+          User.countDocuments().then(count => {
+            expect(count).toBe(1);
+            done();
+          }).catch( err => done(err));
+      });
+      
+  }); // End it
+  it('should not create a new user when email already exist: POST /users', async () => {
+    const payload = { 
+    email: userPayload[0].email,
+    password: '1235gsvs',
+    };
+    request(app)
+      .post('/users')
+      .send(payload)
+      .expect(409)
+      .end(async (err, res) => {
+        if(err) return console.error(err);
+        expect(res.body.error).toBe('email already exist');
+        expect(res.body.error).toBeTruthy();
+          const count = await User.countDocuments().catch( err => console.error(err));
+            expect(count).toBe(1);
+      });
+      
+  }); // End it
+  
+  }); // End describe users 
+}); // End describe POST
 
 describe('DELETE route', () => {
   describe('DELETE /todos/id', () => {
@@ -170,9 +284,23 @@ describe('DELETE route', () => {
           expect(res.body.message).toBe('Todo not found');
           done();
         });
-    });
-  });
-});
+    }); // End it
+  });// End describe DELETE todos
+  
+  describe('DELETE users', () => {
+    it('should delete all users in the db: DELETE /users', (done) => {
+      request(app)
+        .delete('/users' )
+        .expect(200)
+        .end((err, res) => {
+          if(err) return done(err);
+          
+          expect(res.body.message).toBe('all users deleted');
+          done();
+        });
+    }); // End it
+  }); // End describe DELETE users
+}); // End describe DELETE
 
 describe('PATCH route', () => {
   describe('PATCH /todos/id', () => {
@@ -233,8 +361,17 @@ describe('PATCH route', () => {
           expect(res.body.todo.completedAt).toBeGreaterThan(0);
         })
         .end(done);
-    });
-    
-    
+    }); // End it
+  }); // End describe PATCH todos
+}); // End describe patch
+
+describe('404 Error Page', () => {
+  it('should redirect to 404 Error Page for unknown route', () => {
+    request(app)
+     .get('/popcorn')
+     .expect(302)
+     .end((err, res) => {
+       if(err) return console.error(err);
+     });
   })
 })
