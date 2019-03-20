@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
  let pass = true;
  
  const promise1 = () => (
@@ -102,6 +104,8 @@ function getUserWithPosts(id) {
 
 async function getUserWithPosts(id) { 
 try {
+ 
+  //const num = fat + 5;
   const user = await databaseGetUser(id)
                  .catch(err => {
                  console.log('First catch block', err);
@@ -113,16 +117,20 @@ try {
                     throw 'failed to load posts' 
                     
                     });
-  console.log( {user, posts});
+                    throw new TypeError('nonesense');
+  console.log( JSON.stringify({user, posts, num}, null, 2));
 } catch(err) {
-  console.error(err);
+  
+  console.error('I was called:', err);
 }
 };
-           getUserWithPosts('lubien').then(console.log) // works fine
+           getUserWithPosts('lubien')//.then(console.log) // works fine
    
-getUserWithPosts('not-exists')//.catch( err => { console.error(err)}); 
+//getUserWithPosts('not-exists')//.catch( err => { console.error(err)}); 
 // 'user not-exists doesn't exists'
 
 //getUserWithPosts('fail-to-get-posts')//.catch(console.error) // 'user fail-to-get-posts doesn't exists'  instead of 'failed to load posts'
 
-console.log('codes lives on')
+console.log('codes lives on');
+const { Schema: { Types: { ObjectId }} } = mongoose;
+//onsole.log('ObjectId:', ObjectId );

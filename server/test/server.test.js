@@ -159,8 +159,8 @@ describe('POST routes', () => {
         if(err) return done(err);
           Todo.countDocuments().then(count => {
             expect(count).toBe(2);
+            done();
           }).catch( err => done(err));
-        done();
       });
       
   }); // End it

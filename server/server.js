@@ -11,7 +11,7 @@ const path = require('path');
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
-const { logger, validate, formatError, validateUser} = require('./../helpers/utils');
+const { logger, validate, formatError, validateUser, format, validateHeader } = require('./../helpers/utils');
 
 
 const app = express();
@@ -133,7 +133,7 @@ app.get('/users', async (req, res) => {
   try {
     const users = await User.find();
     users.reverse();
-    res.status(200).send({ users});
+    res.status(200).send({ users });
   } catch (err) {
     res.send(err);
   }
@@ -158,17 +158,35 @@ app.post('/users', async (req, res) => {
     
     const newUser = await user.generateAuthUser().catch( err => { throw err });
   
-  const { _id: id, tokens: [{token}] } = newUser;
+  const { tokens: [{token}] } = newUser;
   
-  res.status(201).header('x-auth', token).send({ id, email });
+  res.status(201).header('x-auth', token).send(newUser);
     }
     catch ( err ) {
-      fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err); });
+      fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err.error); });
       
       if(err.details) return res.status(400).send(formatError(err));
       
     res.status(err.statusCode || 500 ).send({error: err.message || err });
     }
+});
+
+app.get('/users/abu', async (req, res) => {
+  try {
+     
+    const pass = await validateHeader(req.header('x-auth')).catch( err => { throw {statusCode: 401, error: err }});
+    
+    const token = req.header('x-auth');
+    const user = await User.findByToken(token).catch( err => { throw err });
+    console.log('return user', user);
+    if(!user) throw { statusCode: 404, error:{message: 'user not found'} }
+    res.send(user);
+  } catch (err) {
+    if(err.error.details) return res.status(err.statusCode).send(formatError(err.error));
+    if(err.statusCode) return res.status(err.statusCode).send(err.error);
+    
+    res.send(err);
+  }
 });
 
 app.all('*', (req, res) => {

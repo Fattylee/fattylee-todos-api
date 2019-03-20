@@ -32,6 +32,21 @@ const UserSchema = new mongoose.Schema({
  ]
 });
 
+UserSchema.statics.findByToken = function (token) {
+  const User = this;
+  let decoded = undefined;
+  try {
+  decoded = jwt.verify(token, 'haleemah123');
+  } catch( err ) { throw { statusCode: 401, error: err }}
+  
+  const { _id } = decoded;
+  return User.findOne({_id});
+};
+
+UserSchema.methods.toJSON = function () {
+  const {_id: id, email } = this.toObject();
+   return { id, email };
+};
 
 UserSchema.methods.generateAuthUser = function () {
   const user = this;
