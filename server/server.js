@@ -11,7 +11,8 @@ const path = require('path');
 const mongoose = require('./mongoose');
 const Todo = require('./model/Todo/Todo').Todo;
 const { User } = require('./model/User/User');
-const { logger, validate, formatError, validateUser, format, validateHeader } = require('./../helpers/utils');
+const { logger, validate, formatError, validateUser, format } = require('./../helpers/utils');
+const { authenticated } = require('./middleware/authenticated')
 
 
 const app = express();
@@ -171,22 +172,8 @@ app.post('/users', async (req, res) => {
     }
 });
 
-app.get('/users/abu', async (req, res) => {
-  try {
-     
-    const pass = await validateHeader(req.header('x-auth')).catch( err => { throw {statusCode: 401, error: err }});
-    
-    const token = req.header('x-auth');
-    const user = await User.findByToken(token).catch( err => { throw err });
-    console.log('return user', user);
-    if(!user) throw { statusCode: 404, error:{message: 'user not found'} }
-    res.send(user);
-  } catch (err) {
-    if(err.error.details) return res.status(err.statusCode).send(formatError(err.error));
-    if(err.statusCode) return res.status(err.statusCode).send(err.error);
-    
-    res.send(err);
-  }
+app.get('/users/abu', authenticated, (req, res) => {
+  res.status(200).send(req.user);
 });
 
 app.all('*', (req, res) => {
