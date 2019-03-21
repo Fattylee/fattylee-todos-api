@@ -160,7 +160,6 @@ app.post('/users', async (req, res) => {
     const newUser = await user.generateAuthUser().catch( err => { throw err });
   
   const { tokens: [{token}] } = newUser;
-  
   res.status(201).header('x-auth', token).send(newUser);
     }
     catch ( err ) {

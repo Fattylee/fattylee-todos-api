@@ -1,18 +1,19 @@
-const {SHA256: hash } = require('crypto-js');
+//import  { Schema } from 'mongoose';
 
-const mongoose = require('mongoose');
+const {SHA256: hash } = require('crypto-js');
+const bcrypt = require('bcryptjs');
 const { verify, sign} = require('jsonwebtoken');
 
 const message = 'I love coding';
 const hashedMessage = hash(message);
 
-console.log('Message', message);
-console.log('Hash', JSON.stringify(hashedMessage, null, 2));
-console.log('HashToString', hashedMessage.toString());
+//console.log('Message', message);
+//console.log('Hash', JSON.stringify(hashedMessage, null, 2));
+//console.log('HashToString', hashedMessage.toString());
 
 const print = (...args) => {
   for (const arg of args) {
-    console.log(arg);
+    //console.log(arg);
   }
 };
 
@@ -65,13 +66,13 @@ promise
  let makeRequest = () => {
    getJSON()
      .then(data => {
-       console.log(data);
+       //console.log(data);
        return "done";
        }).then(console.log)
  };
 
 makeRequest = async () => {
-  console.log(await getJSON());
+  //console.log(await getJSON());
   return 'done';
 };
 
@@ -89,7 +90,7 @@ function fab() {
 
 async function getPro() {
   return fab().then(res => {
-    console.log('resolve', res);
+    //console.log('resolve', res);
     return res;
   });
 };
@@ -97,10 +98,23 @@ async function getPro() {
 async function map() {
   return 6;
 }
-console.log(map())//.then(console.log))
+//console.log(map())//.then(console.log))
 
 //console.log(getPro().then(console.log));
 
 
 //console.log(fn())
 //fn().then(console.log)
+
+const password = 'abu Adnaan';
+bcrypt.genSalt(10).then( salt => {
+  console.log('salt', salt);
+  bcrypt.hash(password, salt).then( hash => {
+    console.log('hash1:', hash);
+    bcrypt.compare(password, hash).then(console.log)
+  })
+})
+bcrypt.hash(password, 10).then(hash =>{
+  console.log('hash2:', hash);
+  bcrypt.compare(password, hash).then(console.log)
+})
