@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
-const Todo = require('./../model/Todo/Todo').Todo;
-const User = require('./../model/User/User').User;
+const Todo = require('./../models/todo').Todo;
+const User = require('./../models/user').User;
 
 
 const payload = [

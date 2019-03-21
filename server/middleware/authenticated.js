@@ -1,6 +1,6 @@
 const { formatError, validateHeader } = require('./../../helpers/utils');
 
-const { User } = require('./../model/User/User');
+const { User } = require('./../models/user');
 
 
 const authenticated = async (req, res, next) => {

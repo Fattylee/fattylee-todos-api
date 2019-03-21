@@ -9,8 +9,8 @@ const path = require('path');
 
 
 const mongoose = require('./mongoose');
-const Todo = require('./model/Todo/Todo').Todo;
-const { User } = require('./model/User/User');
+const Todo = require('./models/todo').Todo;
+const { User } = require('./models/user');
 const { logger, validate, formatError, validateUser, format } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated')
 
