@@ -60,7 +60,7 @@ UserSchema.statics.findByToken = function (token) {
 
 UserSchema.methods.toJSON = function () {
   const {_id: id, email } = this.toObject();
-   return { id, email };
+  return { id, email };
 };
 
 UserSchema.methods.generateAuthUser = function () {

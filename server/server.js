@@ -30,6 +30,17 @@ app.use('/', (req, res, next) => {
 
 app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
+app.get('/todos', (req, res) => {
+  Todo.find()
+    .sort('text')
+    //.select('text -_id')
+    .then(docs => {
+      res.status(200).send({todos: docs});
+    },
+    
+    err => console.error(err));
+    
+});
 
 app.get('/todos/:id', (req, res) => {
   const {id} = req.params;
@@ -43,18 +54,6 @@ app.get('/todos/:id', (req, res) => {
       res.status(200).send({todo});
     })
     .catch(err => res.send(err));
-});
-
-app.get('/todos', (req, res) => {
-  Todo.find()
-    .sort('text')
-    //.select('text -_id')
-    .then(docs => {
-      res.status(200).send({todos: docs});
-    },
-    
-    err => console.log(err));
-    
 });
 
 app.post('/todos', (req, res) => {

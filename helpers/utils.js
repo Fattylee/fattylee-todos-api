@@ -49,7 +49,7 @@ const formatError = (err) => {
 const format = obj => JSON.stringify(obj, null, 2);
 const validateHeader = (header) => {
   return (Joi.validate({ header }, Joi.object().keys({
-      header: Joi.string().required().label('x-auth Header'),
+      header: Joi.string().trim().required().label('x-auth Header'),
     })));
 }
 module.exports = {
