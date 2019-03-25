@@ -221,7 +221,6 @@ describe('GET /users', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.users.length).toBe(2);
-          //expect(res.body.users[0].tokens).toEqual(expect.arrayContaining(userPayload[0].tokens));
         })
         .end(done);
     }); // end it
@@ -244,17 +243,13 @@ describe('DELETE /users', () => {
 }); // end DELETE /users
 
 describe('POST /users', () => {
-  let counter = 0;
   beforeEach(async () => {
     try {
-      await Promise.all([
-      Todo.deleteMany(), User.deleteMany()]).catch( err => { throw err });
+      await User.deleteMany().catch( err => { throw err });
       const all = await  Promise.all([
-        Todo.insertMany(todoPayload), 
         new User(userPayload[0]).save(),
         new User(userPayload[1]).generateAuthUser(),
         ]).catch( err => { throw err });
-      //console.log('all:', ++counter,  all[1], '\n==========', all[2]);
     } catch( err ) { console.error(err); }
     });
 
@@ -274,6 +269,7 @@ describe('POST /users', () => {
         
          User.find().then( data => {
            expect(data.length).toBe(3);
+           expect(data[2].password).not.toBe(payload.password);
            done();
          }).catch( err => done(err));
       });
@@ -342,28 +338,6 @@ describe('POST /users', () => {
 }); // End POST /users 
 
 describe('AUTH Route: GET /users/abu', () => {
-  let counter = 0, token;
-  /*
-  beforeEach(async () => {
-      try {
-        
-        let res = await User.deleteMany().catch( err => { throw err });
-        const users = [
-      {email: 'abdullah@gnail.com', 'password': '123hag4hello'}, 
-      {email: 'fattylee@gnail.com', 'password': '1234hello'}
-      ];
-        const user1 = new User(users[0]).generateAuthUser();
-        const user2 = new User(users[1]).generateAuthUser();
-       res = await Promise.all([user1, user2]).catch( err => { throw err });
-      
-       res = await User.find().catch(err => { throw err });
-        
-      ( [{tokens: [{token}]}] = res );
-      }
-      catch (err) { console.error(err); }
-      
-    });*/
-
   it('should return authenticated user', async () => {
     const [{ tokens: [{token}]}] = userPayload;
     request(app)
@@ -377,27 +351,29 @@ describe('AUTH Route: GET /users/abu', () => {
          expect(user.body.email).toBe('abc@gmail.com');
       });
   }); // end it
-  it('should not return user wen header is not set', async () => {
+  it('should not return user wen header is not set', (done) => {
     request(app)
       .get('/users/abu')
       .expect(401)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
-        expect(user.body.error[0].message).toBe('"x-auth Header" is required')
+      expect(user.body.error[0].message).toBe('"x-auth Header" is required');
+        done();
       });
   }); // end it
-  it('should not return user wen header is set to empty', async () => {
+  it('should not return user wen header is set to empty', (done) => {
     request(app)
       .get('/users/abu')
       .set('x-auth', '')
       .expect(401)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
         expect(user.body.error[0].message).toBe('"x-auth Header" is not allowed to be empty')
+        done();
       });
   }); // end it
   it('should return 404 for a valid token that is not in the db', async () => {
