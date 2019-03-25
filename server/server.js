@@ -9,9 +9,10 @@ const path = require('path');
 
 
 const mongoose = require('./mongoose');
-const Todo = require('./model/Todo/Todo').Todo;
-const { User } = require('./model/User/User');
-const { logger, validate, formatError, validateUser} = require('./../helpers/utils');
+const Todo = require('./models/todo').Todo;
+const { User } = require('./models/user');
+const { logger, validate, formatError, validateUser, format } = require('./../helpers/utils');
+const { authenticated } = require('./middleware/authenticated')
 
 
 const app = express();
@@ -29,6 +30,17 @@ app.use('/', (req, res, next) => {
 
 app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
+app.get('/todos', (req, res) => {
+  Todo.find()
+    .sort('text')
+    //.select('text -_id')
+    .then(docs => {
+      res.status(200).send({todos: docs});
+    },
+    
+    err => console.error(err));
+    
+});
 
 app.get('/todos/:id', (req, res) => {
   const {id} = req.params;
@@ -42,18 +54,6 @@ app.get('/todos/:id', (req, res) => {
       res.status(200).send({todo});
     })
     .catch(err => res.send(err));
-});
-
-app.get('/todos', (req, res) => {
-  Todo.find()
-    .sort('text')
-    //.select('text -_id')
-    .then(docs => {
-      res.status(200).send({todos: docs});
-    },
-    
-    err => console.log(err));
-    
 });
 
 app.post('/todos', (req, res) => {
@@ -133,7 +133,7 @@ app.get('/users', async (req, res) => {
   try {
     const users = await User.find();
     users.reverse();
-    res.status(200).send({ users});
+    res.status(200).send({ users });
   } catch (err) {
     res.send(err);
   }
@@ -141,13 +141,12 @@ app.get('/users', async (req, res) => {
 
 app.delete('/users', (req, res) => {
   User.deleteMany().then(() => {
-    res.send({ message: 'all users deleted'});
-  })
-})
+    res.status(200).send({ message: 'all users deleted'});
+  }).catch( err => { console.error(err); })
+});
 
-app.post('/users', (req, res) => {
-  
-  const createUser = async () => {
+app.post('/users', async (req, res) => {
+  try {
     const value = await validateUser(req.body).catch( err => { throw err });
     
     const { email } = value;
@@ -158,23 +157,22 @@ app.post('/users', (req, res) => {
     if(emailExist) throw { message: 'email already exist', statusCode: 409 };
     
     const newUser = await user.generateAuthUser().catch( err => { throw err });
-    return newUser;
-  };
   
-  createUser()
-    .then( ({ id, email, tokens:[{token}] }) => {
-    
-      res.status(201).header('x-auth', token).send({ id, email });
-    })
-    .catch( err => {
-      fs.appendFile('error.log', JSON.stringify(err, null, 2) + '\n===========', (err) => console.log('error saved'));
+  const { tokens: [{token}] } = newUser;
+  res.status(201).header('x-auth', token).send(newUser);
+    }
+    catch ( err ) {
+      fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err.error); });
       
       if(err.details) return res.status(400).send(formatError(err));
       
-    res.status(err.statusCode || 500 ).send(err.message || err );
-  });
+    res.status(err.statusCode || 500 ).send({error: err.message || err });
+    }
 });
 
+app.get('/users/abu', authenticated, (req, res) => {
+  res.status(200).send(req.user);
+});
 
 app.all('*', (req, res) => {
   
