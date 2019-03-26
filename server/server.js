@@ -6,12 +6,14 @@ const fs = require('fs');
 const Joi = require('joi');
 const {ObjectID} = require('mongodb');
 const path = require('path');
+require('dotenv').config();
+
 
 
 const mongoose = require('./mongoose');
 const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
-const { logger, validate, formatError, validateUser, format } = require('./../helpers/utils');
+const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated')
 
 
@@ -139,10 +141,23 @@ app.get('/users', async (req, res) => {
   }
 })
 
-app.delete('/users', (req, res) => {
-  User.deleteMany().then(() => {
+app.delete('/users', async (req, res) => {
+  
+  try {
+    const value = await Joi.validate(req.body, Joi.object().options({ abortEarly: false }).keys({
+      key: Joi.string().trim().required(),
+    })).catch( err => { throw err });
+    
+    if(value.key !== process.env.SUPER_USER_KEY)  throw { statusCode:401, message: 'Invalid key' };
+    
+  await User.deleteMany().catch( err => { throw err });
     res.status(200).send({ message: 'all users deleted'});
-  }).catch( err => { console.error(err); })
+  }
+  catch(err) {
+    if(err.details) return res.status(400).send(formatError(err));
+    
+    res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
+  }
 });
 
 app.post('/users', async (req, res) => {
@@ -162,15 +177,16 @@ app.post('/users', async (req, res) => {
   res.status(201).header('x-auth', token).send(newUser);
     }
     catch ( err ) {
-      fs.appendFile('.error.log', JSON.stringify(err, null, 2) + '\n===========', err => { if(err) console.error(err.error); });
-      
+      // save all error messages to .error.log
+      saveLog(err);
+    
       if(err.details) return res.status(400).send(formatError(err));
       
     res.status(err.statusCode || 500 ).send({error: err.message || err });
     }
 });
 
-app.get('/users/abu', authenticated, (req, res) => {
+app.get('/users/auth', authenticated, (req, res) => {
   res.status(200).send(req.user);
 });
 

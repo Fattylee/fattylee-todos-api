@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const fs = require('fs');
 
 const filePath = (dir, path) => {
   return (
@@ -51,6 +52,10 @@ const validateHeader = (header) => {
   return (Joi.validate({ header }, Joi.object().keys({
       header: Joi.string().trim().required().label('x-auth Header'),
     })));
+};
+const saveLog = (err) => {
+  fs.appendFile('.error.log', (err.stack || format(err)) + '\n='.padEnd(50, '=') + '\n '
+  , err => { if(err) console.error(err.error); });
 }
 module.exports = {
   filePath,
@@ -60,4 +65,5 @@ module.exports = {
   validateUser,
   format,
   validateHeader,
+  saveLog,
 }

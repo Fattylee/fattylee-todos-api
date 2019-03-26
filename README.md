@@ -6,6 +6,8 @@ Fattylee-web-services is a web application for keeping track of one's todo. whic
 
 You will learn so much about `RESTfUL API's. Just switch to any commit to experiment and learn what is in that `commit`. have fun as ever!
 
+[View release version here](https://fattylee-todos-api.herokuapp.com)
+
 ##Installation
 
 node:
@@ -42,10 +44,17 @@ path:
  ```
  
   ```js
- GET /users  get all users 
+ GET /users/  get all users 
  ```
  
  ```js
  POST /users  create a user
  ```
  
+ ```js
+ DELETE /users  delete all users 
+ ```
+ 
+ ```js
+ GET /users/auth  get auth user
+ ```

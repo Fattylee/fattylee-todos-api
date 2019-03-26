@@ -216,7 +216,7 @@ describe('PATCH /todos/id', () => {
 
 describe('GET /users', () => {
     it('should get all users: GET /users', (done) => {
-      request(app)
+       request(app)
         .get('/users')
         .expect(200)
         .expect((res) => {
@@ -229,17 +229,39 @@ describe('GET /users', () => {
 
 
 describe('DELETE /users', () => {
-  it('should delete all users in the db: DELETE /users', (done) => {
+  it('should delete all users in the db', (done) => {
     request(app)
-      .delete('/users' )
-        .expect(200)
-        .end((err, res) => {
-          if(err) return done(err);
-          
-          expect(res.body.message).toBe('all users deleted');
+      .delete('/users')
+      .send({ key: process.env.SUPER_USER_KEY })
+      .expect(200)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.message).toBe('all users deleted');
           done();
         });
     }); // end it
+    it('should not delete users in the db if key is not supplied', (done) => {
+    request(app)
+      .delete('/users')
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error[0].message).toEqual('"key" is required');
+          done();
+        });
+    }); // end it
+    it('should not delete users in the db if key is invalid', (done) => {
+    request(app)
+      .delete('/users')
+      .send({ key: 'vvgvv' })
+      .expect(401)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toBe('Invalid key');
+          done();
+        });
+    }); // end it
+    
 }); // end DELETE /users
 
 describe('POST /users', () => {
@@ -337,23 +359,24 @@ describe('POST /users', () => {
   }); // End it
 }); // End POST /users 
 
-describe('AUTH Route: GET /users/abu', () => {
-  it('should return authenticated user', async () => {
+describe('AUTH Route: GET /users/auth', () => {
+  it('should return authenticated user', (done) => {
     const [{ tokens: [{token}]}] = userPayload;
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .set('x-auth', token)
       .expect(200)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
          expect(user.body.email).toBe('abc@gmail.com');
       });
+      done();
   }); // end it
-  it('should not return user wen header is not set', (done) => {
+  it('should not return user when header is not set', (done) => {
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .expect(401)
       .end((err, user) => {
         if(err) {
@@ -363,9 +386,9 @@ describe('AUTH Route: GET /users/abu', () => {
         done();
       });
   }); // end it
-  it('should not return user wen header is set to empty', (done) => {
+  it('should not return user when header is set to empty', (done) => {
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .set('x-auth', '')
       .expect(401)
       .end((err, user) => {
@@ -376,36 +399,52 @@ describe('AUTH Route: GET /users/abu', () => {
         done();
       });
   }); // end it
-  it('should return 404 for a valid token that is not in the db', async () => {
+  it('should return 404 for a valid token that is not in the db', (done) => {
     const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123');
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .set('x-auth', token)
       .expect(404)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
         expect(user.body.message).toBe('user not found')
+        done();
       });
   }); // end it
-  it('should return 401 for a invalid token', async () => {
-    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123').toString().slice(1);
+  it('should return 401 for invalid token signature', (done) => {
+    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123').toString().slice(0, -4) + '1234';
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .set('x-auth', token)
       .expect(401)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
-        expect(user.body.message).toBe('invalid token')
+        expect(user.body.message).toBe('invalid signature')
+        done();
+      });
+  }); // end it
+  it('should return 401 for a invalid token', (done) => {
+    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123').toString().slice(1);
+    request(app)
+      .get('/users/auth')
+      .set('x-auth', token)
+      .expect(401)
+      .end((err, user) => {
+        if(err) {
+          return done(err);
+        }
+        expect(user.body.message).toBe('invalid token');
+        done();
       });
   }); // end it
   it('should return 401 for a invalid token 344yyhh of shorter length', async () => {
     const token = '344yyhh';
     request(app)
-      .get('/users/abu')
+      .get('/users/auth')
       .set('x-auth', token)
       .expect(401)
       .end((err, user) => {
