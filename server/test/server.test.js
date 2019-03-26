@@ -371,8 +371,8 @@ describe('AUTH Route: GET /users/auth', () => {
           return done(err);
         }
          expect(user.body.email).toBe('abc@gmail.com');
+         done();
       });
-      done();
   }); // end it
   it('should not return user when header is not set', (done) => {
     request(app)

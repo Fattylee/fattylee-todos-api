@@ -6,8 +6,6 @@ const fs = require('fs');
 const Joi = require('joi');
 const {ObjectID} = require('mongodb');
 const path = require('path');
-require('dotenv').config();
-
 
 
 const mongoose = require('./mongoose');
