@@ -12,7 +12,8 @@ const mongoose = require('./mongoose');
 const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
 const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
-const { authenticated } = require('./middleware/authenticated')
+const { authenticated } = require('./middleware/authenticated');
+const bcrypt = require('bcryptjs');
 
 
 const app = express();
@@ -169,10 +170,11 @@ app.post('/users', async (req, res) => {
     
     if(emailExist) throw { message: 'email already exist', statusCode: 409 };
     
-    const newUser = await user.generateAuthUser().catch( err => { throw err });
-  
-  const { tokens: [{token}] } = newUser;
-  res.status(201).header('x-auth', token).send(newUser);
+    await user.save().catch( err => { throw err });
+
+    const token = await user.generateAuthToken().catch( err => { throw err });
+    
+  res.status(201).header('x-auth', token).send({user});
     }
     catch ( err ) {
       // save all error messages to .error.log
@@ -182,10 +184,30 @@ app.post('/users', async (req, res) => {
       
     res.status(err.statusCode || 500 ).send({error: err.message || err });
     }
-});
+}); // end post /users
 
 app.get('/users/auth', authenticated, (req, res) => {
   res.status(200).send(req.user);
+});
+
+app.post('/users/login', async (req, res) => {
+  try {
+    const payload = await validateUser(req.body).catch( err => { throw err });
+    const validUser = await User.findByCredentials(payload).catch( err => { throw err });
+    
+    const token = await validUser.generateAuthToken().catch(err => { throw err });
+    
+    return res.status(200).header('x-auth', token).send({message: 'login was successful',
+    user: validUser
+    });
+  }
+  catch(err) {
+    // save all error messages to .error.log
+      saveLog(err);
+    
+      if(err.details) return res.status(400).send(formatError(err));
+    res.status(err.statusCode || 500).send({error: err.message || err });
+  }
 });
 
 app.all('*', (req, res) => {

@@ -8,22 +8,24 @@ const Todo = require('./../models/todo').Todo;
 const User = require('./../models/user').User;
 const { format } = require('../../helpers/utils');
 
-const { userPayload, todoPayload, populateDB } = require('./seed/seed');
+const { userPayload, todoPayload, populateDB, plainPassword, plainPassword2 } = require('./seed/seed');
 
 
 beforeEach(populateDB);
 
 describe('Home page route GET /', () => {
-    it('should GET /', (done) => {
+    it('should GET /', async () => {
     request(app)
       .get('/')
       .expect(200)
-      .end(done);
+      .end((err, res) => {
+        if(err) return console.error(err);
+      });
   }); // end it
 }); //end Home page
 
 describe('GET /todos', () => {
-  it('should get all todos GET /todos', (done) => {
+  it('should get all todos GET /todos', async () => {
     request(app)
       .get('/todos')
       .expect(200)
@@ -31,32 +33,22 @@ describe('GET /todos', () => {
         expect(res.body.todos.length).toBe(2);
       })
       .end((err, res) => {
-        if (err) return done(err);
-        
-        Todo.find({
-       completed: true,
-        })
-          .then(res => {
-            const size = res.length;
-            expect(res.length).toBe(size);
-            done();
-          })
-          .catch(err => done(err));
-       
-      })
+        if (err) return console.error(err);
+      });
   }); // end it
 }); //End GET /todos
 
 describe('GET /todos/:id', () => {
-  it('should get a todo by id: GET /todos/id', (done) => {
+  it('should get a todo by id: GET /todos/id', async () => {
       const id = todoPayload[0]._id.toHexString();
       request(app)
         .get(`/todos/${id}`)
         .expect(200)
         .then(todo => {
           expect(todo.body.todo.text).toBe(todoPayload[0].text);
-          done();
-          }).catch(err => done(err));
+          //done();
+          })
+          .catch(err => console.error(err));
   }); // end it
   
   it('should return 404 for invalid id: GET /todos/123', done => {
@@ -83,7 +75,7 @@ describe('GET /todos/:id', () => {
 }); // end GET /todos/:id
 
 describe('POST /todos', () => {
-  it('should create a todo: POST /todos', (done) => {
+  it('should create a todo: POST /todos', async () => {
     const payload = {
       text: 'look for kali-termux'
     };
@@ -95,7 +87,9 @@ describe('POST /todos', () => {
         res.body.text = 'Abu payload';
         expect(res.body.text).toBe('Abu payload');
       })
-      .end(done);
+      .end((err, res) => {
+        if(err) return console.error(err);
+      });
       }); // end it
       
   it('should not create a new todo: POST /todos', (done) => {
@@ -154,18 +148,16 @@ describe('POST /todos', () => {
 });// End DELETE todos/:id
 
 describe('PATCH /todos/id', () => {
-  it('should update a todo succesdully: PATCH /todos/id', (done) => {
+  it('should update a todo succesdully: PATCH /todos/id', async () => {
     request(app)
       .patch('/todos/' + todoPayload[0]._id)
         .send({ completed: true, text: 'visit the masjid by 12noon' })
         .expect(200)
         .end((err, res) => {
-          if(err) return done(err);
-          
+          if(err) return console.error(err);
           expect(res.body.todo.completed).toBeTruthy();
           expect(res.body.todo.text).toMatch(/VISIT/i);
           expect(res.body.todo.completedAt).toBeGreaterThan(0);
-          done();
         });
     }); // end it
     
@@ -265,56 +257,41 @@ describe('DELETE /users', () => {
 }); // end DELETE /users
 
 describe('POST /users', () => {
-  beforeEach(async () => {
-    try {
-      await User.deleteMany().catch( err => { throw err });
-      const all = await  Promise.all([
-        new User(userPayload[0]).save(),
-        new User(userPayload[1]).generateAuthUser(),
-        ]).catch( err => { throw err });
-    } catch( err ) { console.error(err); }
-    });
-
-  it('should create a user: POST /users', (done) => {
+   it('should create a user: POST /users', (done) => {
     const payload = {
-      email: 'absc@yahoo.COM',
+      email: 'lakers@yahoo.COM',
       password: 'password12',
     };
     request(app)
       .post('/users')
       .send(payload)
       .expect(201)
-      .end((err, res) => {
-        if(err) return done(err);
+      .then((res) => {
        
-       expect(res.header['x-auth']).toBeTruthy(); expect(res.body.email).toBe('absc@yahoo.com');
-        
-         User.find().then( data => {
-           expect(data.length).toBe(3);
-           expect(data[2].password).not.toBe(payload.password);
-           done();
-         }).catch( err => done(err));
-      });
+       expect(res.header['x-auth']).toBeTruthy(); expect(res.body.user.email).toBe('lakers@yahoo.com');
+       User.find().then(data => {
+         expect(data.length).toBe(3);
+       expect(data[2].password).not.toBe(payload.password);
+       done();
+       }).catch( err => done(err));
+      }).
+      catch(done);
   }); // End it
-  
-  it('should not create a new user when payload is empty: POST /users', (done) => {
+  it('should not create a new user when payload is empty', async () => {
     request(app)
       .post('/users')
-      .send({})
+      .send()
       .expect(400)
-      .end((err, res) => {
-        if(err) return done(err);
+      .end(async (err, res) => {
+        if(err) return console.error(err);
         
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error.length).toBe(2);
-          User.countDocuments().then(count => {
-            expect(count).toBe(2);
-            done();
-          }).catch( err => done(err));
+        const users = await User.find().catch(console.error);
+        expect(users.length).toBe(2);
       });
-      
   }); // End it
-  it('should not create a new user when email is invalid: POST /users', (done) => {
+  it('should not create a new user when email is invalid', async () => {
     const payload = { 
     email: 'abcgmail.com',
     password: '1235gsvs',
@@ -323,68 +300,45 @@ describe('POST /users', () => {
       .post('/users')
       .send(payload)
       .expect(400)
-      .end((err, res) => {
-        if(err) return done(err);
+      .end(async (err, res) => {
+        if(err) return console.error(err);
         
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error[0].message).toMatch('must be a valid email')
         expect(res.body.error.length).toBe(1);
-          User.countDocuments().then(count => {
-            expect(count).toBe(2);
-            done();
-          }).catch( err => done(err));
+        const count = await User.countDocuments().catch(console.error);
+        expect(count).toBe(2);
       });
-      
   }); // End it
-  it('should not create a new user when email already exist: POST /users', (done) => {
-    const payload = { 
-    email: userPayload[0].email,
-    password: '1235gsvs',
-    };
+  it('should not create a new user when email already exist', (done) => {
+    const [{email, password}] = userPayload;
     request(app)
       .post('/users')
-      .send(payload)
+      .send({email, password})
       .expect(409)
-      .end((err, res) => {
-        if(err) return done(err);
-        expect(res.body.error).toBe('email already exist');
+      .then(async (res) => {
+        
+          expect(res.body.error).toBe('email already exist');
         expect(res.body.error).toBeTruthy();
-        User.countDocuments()
-        .then( count => {
-          expect(count).toBe(2);
-          done();
-        }).catch( err => done(err));            
-      });
-      
+        const users = await User.find().catch(console.error);
+        expect(users.length).toBe(2);     
+        done();
+      })
+      .catch(done);
   }); // End it
+   
 }); // End POST /users 
 
 describe('AUTH Route: GET /users/auth', () => {
-  it('should return authenticated user', (done) => {
-    const [{ tokens: [{token}]}] = userPayload;
-    request(app)
-      .get('/users/auth')
-      .set('x-auth', token)
-      .expect(200)
-      .end((err, user) => {
-        if(err) {
-          return done(err);
-        }
-         expect(user.body.email).toBe('abc@gmail.com');
-         done();
-      });
-  }); // end it
-  it('should not return user when header is not set', (done) => {
+  
+  it('should not return user when header is not set', async () => {
     request(app)
       .get('/users/auth')
       .expect(401)
-      .end((err, user) => {
-        if(err) {
-          return done(err);
-        }
-      expect(user.body.error[0].message).toBe('"x-auth Header" is required');
-        done();
-      });
+      .then((user) => {
+        expect(user.body.error[0].message).toBe('"x-auth Header" is required');
+      })
+      .catch(console.error);
   }); // end it
   it('should not return user when header is set to empty', (done) => {
     request(app)
@@ -454,8 +408,95 @@ describe('AUTH Route: GET /users/auth', () => {
         expect(user.body.message).toBe('jwt malformed')
       });
   }); // end it
+  it('should return authenticated user', (done) => {
+    const [{ tokens: [{token}]}] = userPayload;
+    request(app)
+      .get('/users/auth')
+      .set('x-auth', token)
+      .expect(200)
+      .end((err, user) => {
+        if(err) {
+          return done(err);
+        }
+         expect(user.body.email).toBe('abc@gmail.com');
+         done();
+      });
+  }); // end it
 
-}); // end GET /users/abu
+}); // end GET /users/auth
+
+describe('POST /users/login', () => {
+  it('should login an authenticated user', (done) => {
+    let result;
+    const [, {email}] = userPayload;
+    request(app)
+      .post('/users/login')
+      .send({
+        email, 
+        password: plainPassword2,
+      })
+      .expect(200)
+      .then( res => {
+        result = res;
+        expect(res.body.message).toBe('login was successful');
+        expect(res.header['x-auth']).toBeTruthy();
+        return User.findById(res.body.user._id)
+        .catch(err => { throw err });
+      })
+      .then(foundUser => {
+          const { tokens: [{token}]} = foundUser;
+          expect(result.header['x-auth']).toBe(token);
+          done();
+        })
+      .catch(done);
+  }); // end it
+  it('should return 401 for email that is not in the db',  (done) => {
+    const [, {email}] = userPayload;
+    request(app)
+      .post('/users/login')
+      .send({
+        email: 'xxx@gamil.com',
+        password: plainPassword,
+      })
+      .expect(401)
+      .end((err, user) => {
+        if(err) return done(err);
+        
+        expect(user.body.error).toBe('incorrect email or password');
+        expect(user.header['x-auth']).toBeFalsy();
+        done();
+      });
+  }); // end it
+  it('should return 401 for invalid password', async () => {
+    const [{email}] = userPayload;
+    request(app)
+      .post('/users/login')
+      .send({
+        email, 
+        password: plainPassword2,
+      })
+      .expect(401)
+      .end((err, user) => {
+        if(err) return console.error(err);
+        expect(user.body.error).toBe('incorrect email or password');
+      });
+  }); // end it
+  it('should return 400 for empty payload', async () => {
+    const [{email}] = userPayload;
+    request(app)
+      .post('/users/login')
+      .expect(400)
+      .end((err, user) => {
+        if(err) return console.error(err);
+        expect(user.body.message).toBe('Invalid input');
+        expect(user.body.error.length).toBe(2);
+        expect(user.body.error[0]).toEqual(expect.objectContaining({
+          message: expect.stringMatching(/is required/),
+        }))
+      });
+  }); // end it
+  
+}); // end POST /users/login
 
 describe('404 Error Page', () => {
   it('should redirect to 404 Error Page for unknown route', () => {

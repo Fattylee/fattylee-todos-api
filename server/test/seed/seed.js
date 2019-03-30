@@ -1,5 +1,6 @@
 const { ObjectID } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { Todo } = require('../../models/todo');
 const { User } = require('../../models/user');
 const { format } = require('../../../helpers/utils');
@@ -10,29 +11,38 @@ const todoPayload = [
 ];
 
 const _id = new ObjectID();
+const id2 = new ObjectID();
+const secrete = 'haleemah123';
+const access = 'auth';
+const plainPassword = '12344671';
+const plainPassword2 = '12344vvh';
 const userPayload = [
   { 
   __v: 0,
   email: 'abc@gmail.com',
-  password: '12344671',
+  password: bcrypt.hashSync(plainPassword, 10),
   _id,
   tokens: [{
-    access: 'auth',
-    token: jwt.sign({_id, access: 'auth'}, 'haleemah123'),
+    access,
+    token: jwt.sign({_id, access }, secrete),
     _id: new ObjectID(),
     }]  
   },
    { 
   __v: 0,
   email: 'abcvh@gmail.com',
-  password: '12344vvh',
-  _id: new ObjectID(),
-  tokens: []
+  password: bcrypt.hashSync(plainPassword2, 10),
+  _id: id2,
+  /*tokens: [{
+    token: jwt.sign({_id: id2, access}, secrete),
+    _id: new ObjectID(),
+    access,
+  }]*/
   }
 ];
 
 let counter = 0;
-
+/*
 const populateDB = async () => {
   try {
     await Promise.all([
@@ -42,13 +52,44 @@ const populateDB = async () => {
    Todo.insertMany(todoPayload), 
    User.insertMany(userPayload),
    ]).catch( err => { throw err });
-    
+   
+   //const users = await User.find().catch(console.error);
+ //  console.log(++counter, users);
   } catch( err ) { console.error(err); }
  
-}
+}*/
+const populateDB = (done) => {
+  try {
+    Promise.all([
+    Todo.deleteMany(), User.deleteMany()])
+    .then(all => {
+      return (Promise.all([
+   Todo.insertMany(todoPayload), 
+   User.insertMany(userPayload),
+   ]).catch( err => { throw err }));
+   })
+   .then(all => {
+     done()
+   })
+   .catch( err => { throw err });
+    
+  } catch(err){ done(err); }
+ 
+};
+
+const populateUsers = async () => {
+    try {
+      await User.deleteMany().catch( err => { throw err });
+      await User.insertMany(userPayload).catch( err => { throw err });
+      
+    } catch( err ) { console.error(err); }
+};
 
 module.exports = {
   userPayload,
   todoPayload,
   populateDB,
+  populateUsers,
+  plainPassword,
+  plainPassword2,
 };
