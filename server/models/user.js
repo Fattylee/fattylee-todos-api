@@ -61,6 +61,7 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.access': 'auth',
   });
 };
+
 UserSchema.statics.findByCredentials = async function ({email, password}) {
   
   const validUser = await User.findOne({email}).catch(err => { throw err});
@@ -73,7 +74,9 @@ UserSchema.statics.findByCredentials = async function ({email, password}) {
 
 UserSchema.methods.toJSON = function () {
   const {_id: id, email } = this.toObject();
-  return this.toObject();//{ id, email };
+  if (process.env.NODE_ENV === 'test')
+  return this.toObject();
+  return { id, email };
 };
 
 UserSchema.methods.generateAuthToken = async function () {
