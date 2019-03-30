@@ -7,6 +7,7 @@ const authenticated = async (req, res, next) => {
 try {
      
     const head = await validateHeader(req.header('x-auth')).catch( err => { throw {statusCode: 401, error: err }});
+    
     const { header: token } = head;
     const user = await User.findByToken(token).catch( err => { throw err });
     if(!user) throw { statusCode: 404, error:{message: 'user not found'} };

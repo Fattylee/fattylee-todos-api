@@ -30,7 +30,7 @@ const UserSchema = new mongoose.Schema({
        required: true,
      }
    }
- ]
+ ],
 });
 
 UserSchema.pre('save', function ( next ){
@@ -55,21 +55,38 @@ UserSchema.statics.findByToken = function (token) {
   } catch( err ) { throw { statusCode: 401, error: err }}
   
   const { _id } = decoded;
-  return User.findOne({_id});
+  return User.findOne({
+    _id,
+    'tokens.token': token,
+    'tokens.access': 'auth',
+  });
+};
+
+UserSchema.statics.findByCredentials = async function ({email, password}) {
+  
+  const validUser = await User.findOne({email}).catch(err => { throw err});
+    if(!validUser) throw { statusCode: 401, message: 'incorrect email or password' };
+    const pass = bcrypt.compareSync(password, validUser.password);
+    
+    if(!pass) throw { statusCode: 401, message: 'incorrect email or password' };
+    return validUser;
 };
 
 UserSchema.methods.toJSON = function () {
   const {_id: id, email } = this.toObject();
+  if (process.env.NODE_ENV === 'test')
+  return this.toObject();
   return { id, email };
 };
 
-UserSchema.methods.generateAuthUser = function () {
+UserSchema.methods.generateAuthToken = async function () {
   const user = this;
   const access = 'auth';
   const token = jwt.sign({ _id: user._id.toString(), access }, 'haleemah123');
   user.tokens = [...user.tokens, {access,token}];
   
-  return user.save();
+  await user.save().catch( err => { throw err });
+  return token;
 };
 
 const User = mongoose.model('Users', UserSchema);

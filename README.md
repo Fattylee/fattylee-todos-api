@@ -58,3 +58,7 @@ path:
  ```js
  GET /users/auth  get auth user
  ```
+ 
+  ```js
+ POST /users/login  user login
+ ```

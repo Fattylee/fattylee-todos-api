@@ -1,5 +1,6 @@
 const { ObjectID } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { Todo } = require('../../models/todo');
 const { User } = require('../../models/user');
 const { format } = require('../../../helpers/utils');
@@ -10,45 +11,56 @@ const todoPayload = [
 ];
 
 const _id = new ObjectID();
+const id2 = new ObjectID();
+const secrete = 'haleemah123';
+const access = 'auth';
+const plainPassword = 'password1';
+const plainPassword2 = 'password2';
 const userPayload = [
   { 
   __v: 0,
   email: 'abc@gmail.com',
-  password: '12344671',
+  password: bcrypt.hashSync(plainPassword, 10),
   _id,
   tokens: [{
-    access: 'auth',
-    token: jwt.sign({_id, access: 'auth'}, 'haleemah123'),
+    access,
+    token: jwt.sign({_id, access }, secrete),
     _id: new ObjectID(),
     }]  
   },
    { 
   __v: 0,
   email: 'abcvh@gmail.com',
-  password: '12344vvh',
-  _id: new ObjectID(),
-  tokens: []
+  password: bcrypt.hashSync(plainPassword2, 10),
+  _id: id2,
   }
 ];
 
 let counter = 0;
 
-const populateDB = async () => {
+const populateDB = (done) => {
   try {
-    await Promise.all([
-    Todo.deleteMany(), User.deleteMany()]).catch( err => { throw err });
-    
-   const all = await  Promise.all([
+    Promise.all([
+    Todo.deleteMany(), User.deleteMany()])
+    .then(all => {
+      return (Promise.all([
    Todo.insertMany(todoPayload), 
    User.insertMany(userPayload),
-   ]).catch( err => { throw err });
+   ]).catch( err => { throw err }));
+   })
+   .then(all => {
+     done()
+   })
+   .catch( err => { throw err });
     
-  } catch( err ) { console.error(err); }
+  } catch(err){ done(err); }
  
-}
+};
 
 module.exports = {
   userPayload,
   todoPayload,
   populateDB,
+  plainPassword,
+  plainPassword2,
 };

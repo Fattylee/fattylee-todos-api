@@ -52,27 +52,32 @@ box-sizing: border-box;
 .home-footer p {
 padding: 20px ;
 }
+.center {
+  text-align: center;
+}
 
 span.animated { animation-delay: 7s }
 </style>
 </head>
 <body>
+
 <div class="container animated bounceInDown ">
-  
-  <h1 class="animated  bounceInUp delay-1s">Welcome to my Todo App, Have fun!</h1>
-  
+  <div class="center animated  bounceInUp delay-1s">
+  <h1><p class="animatedr infinite flip slower delay-3s">Welcome</p> to my Todo App, Have fun!</h1>
+  </div>
   <h2 class="animated rollIn delay-2s">Api Docs</h2>
   
   <ul class="animated zoomIn delay-3s">
   	<li><span class="animated infinite heartBeat">GET /todos</span>	get all todos</li>
-  	<li><span class="animated infinite flipInX slower">GET /todos/todoId</span>  get a todo by ID</li>
-  	<li><span class="animated infinite jackInTheBox">POST /todos</span> create a todo</li>
-  	<li><span class="animated infinite shake slower">PATCH /todos/todoId</span> update a todo</li>
+  	<li><span class="animated infinite flash slower">GET /todos/todoId</span>  get a todo by ID</li>
+  	<li><span class="animated infinite heartBeat">POST /todos</span> create a todo</li>
+  	<li><span class="animated infinite flash slower">PATCH /todos/todoId</span> update a todo</li>
   	 		<li><span class="animated infinite heartBeat">GET /users</span>	get all users</li>
   	<li><span class="animated infinite flash">POST /users</span> create a user</li>
   	
   		<li><span class="animated infinite heartBeat">DELETE /users</span>	delete all users</li>
   	<li><span class="animated infinite flash">GET /users/auth</span> get auth user (requires a valid token) </li>
+  	<li><span class="animated infinite heartBeat">POST /users/login</span>	user login</li>
   </ul>
 </div>
 
