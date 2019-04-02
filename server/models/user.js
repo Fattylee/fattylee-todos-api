@@ -89,6 +89,16 @@ UserSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
+UserSchema.methods.findByTokenAndDelete = async function (token, oldUser) {
+  try {
+    const user = this;
+    
+  }
+  catch(err) {
+    throw err;
+  }
+}
+
 const User = mongoose.model('Users', UserSchema);
 
 module.exports = {
