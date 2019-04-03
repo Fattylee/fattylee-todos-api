@@ -12,4 +12,8 @@ else if (env === 'test') {
   process.env.SUPER_USER_KEY='auth@212';
 }
 
+else if(env === 'staging') {
+  process.env.MONGOLAB_URI = process.env.TEST_DB
+}
+
 module.exports = env;
