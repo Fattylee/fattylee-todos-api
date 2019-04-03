@@ -38,7 +38,7 @@ const SchemaUser = new mongoose.Schema({});
 //console.log(SchemaUser);
 
 const myArr = [12, 45];
-const newArr = myArr.concat([56, 20], ['farisco']);
+let newArr = myArr.concat([56, 20], ['farisco']);
 const arrPush = myArr.push(45, 67);
 
 // console.log(myArr, newArr, 'arrPush', arrPush);
@@ -172,11 +172,21 @@ bcrypt.compare(password, hash4).then( res => {
 console.log('compare sync with hashAsync1:', hashAsync1, bcrypt.compareSync(password, hashAsync1));
 
 console.log('compare sync with hashAsync2:', hashAsync2, bcrypt.compareSync(password, hashAsync2));
-*/
 
 const password = 'loocer';
 const h = bcrypt.hashSync(password, 11);
 console.log(password, '<==>', h);
 console.log('compare result:', bcrypt.compareSync('ggg', h));
 console.log('last line');
+*/
+newArr = [1,2,3,4];
+/*
+console.log(newArr);
+newArr.length = 0;
+newArr.concat([5,6,7])
 
+console.log(newArr.push(0,9,8))
+newArr.push(...newArr)
+*/
+console.log(newArr.splice(0,newArr.length,...[5,6,7,8,]))
+console.log(newArr)
