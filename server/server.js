@@ -186,6 +186,7 @@ app.post('/users', async (req, res) => {
     }
 }); // end post /users
 
+// private route requires a valid token
 app.get('/users/auth', authenticated, (req, res) => {
   res.status(200).send(req.user);
 });
@@ -207,6 +208,28 @@ app.post('/users/login', async (req, res) => {
     
       if(err.details) return res.status(400).send(formatError(err));
     res.status(err.statusCode || 500).send({error: err.message || err });
+  }
+});
+
+// remove a token aka logout
+app.delete('/users/auth/token', authenticated, async (req, res) => {
+  try {
+  //  const user = await user.findByTokenAndDelete(token);
+  const { tokens } = req.user;
+  const token = req.header('x-auth');
+  const filteredTokens = tokens.filter(eachToken =>  eachToken.token !== token );
+  req.user.tokens.splice(0, req.user.tokens.length, ...filteredTokens);
+  const user = await req.user.save().catch(err => {throw err})
+    
+    res.status(200).send({
+      message: 'logout was successful',
+      user,
+    });
+  }
+  catch(err) {
+    console.error(err);
+    
+    res.status(500).send({message: err.message || err, stack: err.stack || err });
   }
 });
 
