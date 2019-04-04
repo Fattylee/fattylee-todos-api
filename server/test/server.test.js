@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const app = require('../server');
 const jwt = require('jsonwebtoken');
 
@@ -14,18 +16,19 @@ const { userPayload, todoPayload, populateDB, plainPassword, plainPassword2 } = 
 beforeEach(populateDB);
 
 describe('Home page route GET /', () => {
-    it('should GET /', async () => {
+    it('should GET /', (done) => {
     request(app)
       .get('/')
       .expect(200)
       .end((err, res) => {
-        if(err) return console.error(err);
+        if(err) return done(err);
+        done();
       });
   }); // end it
 }); //end Home page
 
 describe('GET /todos', () => {
-  it('should get all todos GET /todos', async () => {
+  it('should get all todos GET /todos', (done) => {
     request(app)
       .get('/todos')
       .expect(200)
@@ -33,22 +36,23 @@ describe('GET /todos', () => {
         expect(res.body.todos.length).toBe(2);
       })
       .end((err, res) => {
-        if (err) return console.error(err);
+        if (err) return done(err);
+        done();
       });
   }); // end it
 }); //End GET /todos
 
 describe('GET /todos/:id', () => {
-  it('should get a todo by id: GET /todos/id', async () => {
+  it('should get a todo by id: GET /todos/id', (done) => {
       const id = todoPayload[0]._id.toHexString();
       request(app)
         .get(`/todos/${id}`)
         .expect(200)
         .then(todo => {
           expect(todo.body.todo.text).toBe(todoPayload[0].text);
-          //done();
+          done();
           })
-          .catch(err => console.error(err));
+          .catch(err => done(err));
   }); // end it
   
   it('should return 404 for invalid id: GET /todos/123', done => {
@@ -395,7 +399,7 @@ describe('AUTH Route: GET /users/auth', () => {
         done();
       });
   }); // end it
-  it('should return 401 for a invalid token 344yyhh of shorter length', async () => {
+  it('should return 401 for a invalid token 344yyhh of shorter length', (done) => {
     const token = '344yyhh';
     request(app)
       .get('/users/auth')
@@ -403,9 +407,10 @@ describe('AUTH Route: GET /users/auth', () => {
       .expect(401)
       .end((err, user) => {
         if(err) {
-          return console.error(err);
+          return done(err);
         }
-        expect(user.body.message).toBe('jwt malformed')
+        expect(user.body.message).toBe('jwt malformed');
+        done();
       });
   }); // end it
   it('should return authenticated user', (done) => {
@@ -427,7 +432,6 @@ describe('AUTH Route: GET /users/auth', () => {
 
 describe('POST /users/login', () => {
   it('should login an authenticated user', (done) => {
-    let result;
     const [, {email}] = userPayload;
     request(app)
       .post('/users/login')
@@ -436,19 +440,19 @@ describe('POST /users/login', () => {
         password: plainPassword2,
       })
       .expect(200)
-      .then( res => {
-        result = res;
+      .end((err, res) => {
+        if(err) return done(err);
+        
         expect(res.body.message).toBe('login was successful');
         expect(res.header['x-auth']).toBeTruthy();
-        return User.findById(res.body.user._id)
-        .catch(err => { throw err });
-      })
-      .then(foundUser => {
+        User.findById(res.body.user._id)
+        .then(foundUser => {
           const { tokens: [{token}]} = foundUser;
-          expect(result.header['x-auth']).toBe(token);
+          expect(res.header['x-auth']).toBe(token);
           done();
         })
-      .catch(done);
+        .catch(done);
+      });
   }); // end it
   it('should return 401 for email that is not in the db',  (done) => {
     const [, {email}] = userPayload;
