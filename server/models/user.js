@@ -73,10 +73,10 @@ UserSchema.statics.findByCredentials = async function ({email, password}) {
 };
 
 UserSchema.methods.toJSON = function () {
-  const {_id: id, email } = this.toObject();
+  const {_id, email } = this.toObject();
   if (process.env.NODE_ENV === 'test')
   return this.toObject();
-  return { id, email };
+  return { _id, email };
 };
 
 UserSchema.methods.generateAuthToken = async function () {
