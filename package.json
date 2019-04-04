@@ -5,6 +5,8 @@
   "main": "server/server.js",
   "scripts": {
     "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec mocha --reporter=spec ./server/test/server.test.js ",
+    "test:circleci": "export NODE_ENV=staging || SET \"NODE_ENV=staging\" && mocha --reporter=spec -t 20000 ./server/test/server.test.js ",
+    "start:server": "nodemon server/server.js -e js,html,css",
     "start": "node server/server.js"
   },
   "engines": {
