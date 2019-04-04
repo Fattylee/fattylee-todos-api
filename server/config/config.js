@@ -13,8 +13,8 @@ else if (env === 'test') {
 }
 
 else if(env === 'staging') {
-  process.env.PORT = 8080;
-  process.env.MONGOLAB_URI = process.env.TEST_DB;
+  //process.env.PORT = 8080;
+  //process.env.MONGOLAB_URI = process.env.TEST_DB;
 }
 
 module.exports = env;
