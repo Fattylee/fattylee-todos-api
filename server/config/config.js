@@ -12,9 +12,4 @@ else if (env === 'test') {
   process.env.MONGOLAB_URI = 'mongodb://127.0.0.1/TodoAppTest';
 }
 
-else if(env === 'staging') {
-  //process.env.PORT = 8080;
-  //process.env.MONGOLAB_URI = process.env.TEST_DB;
-}
-
 module.exports = env;
