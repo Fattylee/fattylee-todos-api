@@ -5,10 +5,6 @@ const { Todo } = require('../../models/todo');
 const { User } = require('../../models/user');
 const { format } = require('../../../helpers/utils');
 
-const todoPayload = [
-{text: 'todo item 1', _id: new ObjectID(), completed: true, completedAt: Date.now() },
-{text: 'todo item 2',  _id: new ObjectID()}
-];
 
 const _id = new ObjectID();
 const id2 = new ObjectID();
@@ -34,6 +30,19 @@ const userPayload = [
   password: bcrypt.hashSync(plainPassword2, 10),
   _id: id2,
   }
+];
+
+const todoPayload = [
+{
+  text: 'todo item 1', 
+  _id: new ObjectID(), 
+  _owner: _id,
+},
+{
+  text: 'todo item 2',
+  _id: new ObjectID(),
+  _owner: id2,
+}
 ];
 
 let counter = 0;

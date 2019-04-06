@@ -46,6 +46,7 @@ const validateHeader = (header) => {
       header: Joi.string().trim().required().label('x-auth Header'),
     })));
 };
+
 const saveLog = (err) => {
   fs.appendFile('.error.log', (err.stack || format(err)) + '\n='.padEnd(50, '=') + '\n '
   , err => { if(err) console.error(err.error); });

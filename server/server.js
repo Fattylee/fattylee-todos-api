@@ -13,6 +13,7 @@ const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
 const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');
+const { validateTodo, validateTodoIdParams } = require('./middleware/validators');
 const bcrypt = require('bcryptjs');
 
 
@@ -31,8 +32,8 @@ app.use('/', (req, res, next) => {
 
 app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
-app.get('/todos', (req, res) => {
-  Todo.find()
+app.get('/todos', authenticated, (req, res) => {
+  Todo.find({_owner: req.user._id})
     .sort('text')
     //.select('text -_id')
     .then(docs => {
@@ -43,12 +44,12 @@ app.get('/todos', (req, res) => {
     
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticated, (req, res) => {
   const {id} = req.params;
   
   if(!ObjectID.isValid(id)) return res.status(404).json({ message: 'Invalid todo id:' + id});
   
-  Todo.findById(id)
+  Todo.findOne({_id: id, _owner: req.user._id})
     .then(todo => {
       if(!todo) return res.status(404).send({ message: 'todo item not found: ' + id});
       
@@ -57,54 +58,43 @@ app.get('/todos/:id', (req, res) => {
     .catch(err => res.send(err));
 });
 
-app.post('/todos', (req, res) => {
-  
-  Joi.validate(
-    req.body,
-    Joi.object().keys({text: Joi.string().min(5).trim().required()}))
-  .then( value => {
+app.post('/todos', authenticated, validateTodo, async (req, res) => {
+  try {
+    const doc = await Todo.insertMany({
+    text: req.payload.text,
+    _owner: req.user._id,
+    }).catch(err => { throw err });
     
-    Todo.insertMany({
-    text: req.body.text,
-    completed: false,
-    completedAt: null
-  })
-    .then(doc => {
-      res.status(201).send(doc[0]);
-    })
-    .catch(err => {
-      res.status(400).send(err);
-    })
-  })
-  .catch( err => {
-    const error = formatError(err); 
-    res.status(400).send(error)
-  })
+    res.status(201).send({todo: doc[0]});
+  
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(err.statusCode || 500 ).send({error: err.message || err });
+    }
   
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
   const { id } = req.params;
   
-  if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
-  
-  Todo.findByIdAndDelete(id)
+  Todo.findOneAndDelete({_id: id, _owner: req.user._id})
     .then(doc => {
       if(!doc) return res.status(404).send({message: 'Todo not found'});
-      
       res.status(200).send(doc)
     })
     .catch(err => res.send(err));
 });
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
   
   validate(req.body)
   .then(result => {
     
   const { id } = req.params;
   
-   if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
    if(req.body.completed === false)
      req.body.completedAt = null;
    
@@ -113,7 +103,7 @@ app.patch('/todos/:id', (req, res) => {
    }
    
   
-  Todo.findOneAndUpdate({_id: id}, req.body, {useFindAndModify: false, new: true})
+  Todo.findOneAndUpdate({_id: id, _owner: req.user._id}, req.body, {useFindAndModify: false, new: true})
     .then(doc => {
       
       if(!doc) return res.status(404).send({ message: 'Todo not found'});
