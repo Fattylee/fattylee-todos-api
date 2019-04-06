@@ -228,12 +228,26 @@ describe('PATCH /todos/id', () => {
 }); // End PATCH todos/:id
 
 describe('GET /users', () => {
-    it('should get all users: GET /users', (done) => {
+    
+    it('should return 401 for non admin user', (done) => {
+       const [, , {tokens: [{token}]}] = userPayload;
+       request(app)
+        .get('/users')
+        .expect(401)
+        .set('x-auth', token)
+        .expect((res) => {
+          expect(res.body.message).toBe('no admin priviledge');
+        })
+        .end(done);
+    }); // end it
+    it('should get all users for an admin user', (done) => {
+       const [{tokens: [{token}]}] = userPayload;
        request(app)
         .get('/users')
         .expect(200)
+        .set('x-auth', token)
         .expect((res) => {
-          expect(res.body.users.length).toBe(2);
+          expect(res.body.users.length).toBe(3);
         })
         .end(done);
     }); // end it
@@ -291,7 +305,7 @@ describe('POST /users', () => {
        
        expect(res.header['x-auth']).toBeTruthy(); expect(res.body.user.email).toBe('lakers@yahoo.com');
        User.find().then(data => {
-         expect(data.length).toBe(3);
+         expect(data.length).toBe(4);
        expect(data[2].password).not.toBe(payload.password);
        done();
        }).catch( err => done(err));
@@ -309,7 +323,7 @@ describe('POST /users', () => {
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error.length).toBe(2);
         const users = await User.find().catch(done);
-        expect(users.length).toBe(2);
+        expect(users.length).toBe(3);
         done();
       });
   }); // End it
@@ -329,7 +343,7 @@ describe('POST /users', () => {
         expect(res.body.error[0].message).toMatch('must be a valid email')
         expect(res.body.error.length).toBe(1);
         const count = await User.countDocuments().catch(console.error);
-        expect(count).toBe(2);
+        expect(count).toBe(3);
       });
   }); // End it
   it('should not create a new user when email already exist', (done) => {
@@ -343,7 +357,7 @@ describe('POST /users', () => {
           expect(res.body.error).toBe('email already exist');
         expect(res.body.error).toBeTruthy();
         const users = await User.find().catch(console.error);
-        expect(users.length).toBe(2);     
+        expect(users.length).toBe(3);     
         done();
       })
       .catch(done);

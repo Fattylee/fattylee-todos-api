@@ -13,7 +13,7 @@ const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
 const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');
-const { validateTodo, validateTodoIdParams } = require('./middleware/validators');
+const { validateTodo, validateTodoIdParams, isAdmin } = require('./middleware/validators');
 const bcrypt = require('bcryptjs');
 
 
@@ -120,7 +120,7 @@ app.patch('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
     });
 });
 
-app.get('/users', async (req, res) => {
+app.get('/users', authenticated, isAdmin, async (req, res) => {
   try {
     const users = await User.find();
     users.reverse();

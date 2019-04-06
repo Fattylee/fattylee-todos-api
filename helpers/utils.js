@@ -31,6 +31,8 @@ const validateUser = (body) =>
   Joi.validate(body, Joi.object().options({ abortEarly: false }).keys({
         email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
         password: Joi.string().trim().min(4).required(),
+        //uncomment to add a new admin while setting the field "isAdmin" to true
+        //isAdmin: Joi.boolean(),
       }))
     );
 const formatError = (err) => {

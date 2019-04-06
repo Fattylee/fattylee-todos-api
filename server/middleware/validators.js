@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const { ObjectID } = require('mongodb');
 const { formatError, saveLog } = require('../../helpers/utils');
+const { User } = require('../models/user')
 
 const validateTodo = async (req, res, next) => {
  try {
@@ -24,7 +25,19 @@ const validateTodoIdParams = (req, res, next) => {
   next();
 };
 
+const isAdmin = async (req, res, next) => {
+  try {
+    const user = await User.findOne({_id: req.user._id, isAdmin: true});
+    if(!user) throw {message: 'no admin priviledge'};
+    next();
+  }
+  catch(err) {
+    res.status(401).send(err);
+  }
+};
+
 module.exports = {
   validateTodo,
   validateTodoIdParams,
+  isAdmin,
 }
