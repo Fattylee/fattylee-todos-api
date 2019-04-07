@@ -13,7 +13,7 @@ const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
 const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');
-const { validateTodo, validateTodoIdParams, isAdmin } = require('./middleware/validators');
+const { validateTodo, validateTodoIdParams, isAdmin, validateKey } = require('./middleware/validators');
 const bcrypt = require('bcryptjs');
 
 
@@ -130,21 +130,13 @@ app.get('/users', authenticated, isAdmin, async (req, res) => {
   }
 })
 
-app.delete('/users', async (req, res) => {
+app.delete('/users', authenticated, isAdmin, validateKey, async (req, res) => {
   
   try {
-    const value = await Joi.validate(req.body, Joi.object().options({ abortEarly: false }).keys({
-      key: Joi.string().trim().required(),
-    })).catch( err => { throw err });
-    
-    if(value.key !== process.env.SUPER_USER_KEY)  throw { statusCode:401, message: 'Invalid key' };
-    
   await User.deleteMany().catch( err => { throw err });
     res.status(200).send({ message: 'all users deleted'});
   }
   catch(err) {
-    if(err.details) return res.status(400).send(formatError(err));
-    
     res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
   }
 });

@@ -256,11 +256,17 @@ describe('GET /users', () => {
 
 
 describe('DELETE /users', () => {
+  const [{tokens: [{token}]}] = userPayload;
   it('should delete all users in the db', (done) => {
     request(app)
       .delete('/users')
       .send({ key: process.env.SUPER_USER_KEY })
+      .set('x-auth', token)
       .expect(200)
+      .expect(async res => {
+        const users = await User.find().catch(done);
+        expect(users.length).toBeFalsy();
+      })
       .end((err, res) => {
         if(err) return done(err);
         expect(res.body.message).toBe('all users deleted');
@@ -270,6 +276,7 @@ describe('DELETE /users', () => {
     it('should not delete users in the db if key is not supplied', (done) => {
     request(app)
       .delete('/users')
+      .set('x-auth', token)
       .expect(400)
       .end((err, res) => {
         if(err) return done(err);
@@ -280,11 +287,25 @@ describe('DELETE /users', () => {
     it('should not delete users in the db if key is invalid', (done) => {
     request(app)
       .delete('/users')
+      .set('x-auth', token)
       .send({ key: 'vvgvv' })
       .expect(401)
       .end((err, res) => {
         if(err) return done(err);
         expect(res.body.error.message).toBe('Invalid key');
+          done();
+        });
+    }); // end it
+    it('should not delete users in the db if user is not an admin', (done) => {
+      const [, , {tokens: [{token}]}] = userPayload;
+    request(app)
+      .delete('/users')
+      .set('x-auth', token)
+      .send({ key: process.env.SUPER_USER_KEY })
+      .expect(401)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.message).toBe('no admin priviledge');
           done();
         });
     }); // end it

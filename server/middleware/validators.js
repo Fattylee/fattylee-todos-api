@@ -36,8 +36,25 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
+const validateKey = async (req, res, next) => {
+  try {
+        const value = await Joi.validate(req.body, Joi.object().options({ abortEarly: false }).keys({
+      key: Joi.string().trim().required(),
+    })).catch( err => { throw err });
+    
+    if(value.key !== process.env.SUPER_USER_KEY)  throw { statusCode:401, message: 'Invalid key' };
+    next()
+  }
+  catch(err) {
+    if(err.details) return res.status(400).send(formatError(err));
+    
+    res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
+  }
+}
+
 module.exports = {
   validateTodo,
   validateTodoIdParams,
   isAdmin,
+  validateKey,
 }
