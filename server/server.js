@@ -196,20 +196,16 @@ app.post('/users/login', async (req, res) => {
 // remove a token aka logout
 app.delete('/users/auth/token', authenticated, async (req, res) => {
   try {
-  //  const user = await user.findByTokenAndDelete(token);
-  const { tokens } = req.user;
-  const token = req.header('x-auth');
-  const filteredTokens = tokens.filter(eachToken =>  eachToken.token !== token );
-  req.user.tokens.splice(0, req.user.tokens.length, ...filteredTokens);
-  const user = await req.user.save().catch(err => {throw err})
-    
+  const user = await User.findByTokenAndDelete(req.header('x-auth')).catch(err => { throw err });
+  
     res.status(200).send({
       message: 'logout was successful',
       user,
     });
   }
   catch(err) {
-    console.error(err);
+    // save all error messages to .error.log
+      saveLog(err);
     
     res.status(500).send({message: err.message || err, stack: err.stack || err });
   }

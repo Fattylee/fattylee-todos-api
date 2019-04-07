@@ -93,10 +93,13 @@ UserSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
-UserSchema.methods.findByTokenAndDelete = async function (token, oldUser) {
+UserSchema.methods.findByTokenAndDelete = async function (token) {
   try {
-    const user = this;
-    
+    const { tokens } = req.user;
+    const filteredTokens = tokens.filter(eachToken =>  eachToken.token !== token );
+  req.user.tokens.splice(0, req.user.tokens.length, ...filteredTokens);
+  const user = await req.user.save().catch(err => {throw err})
+    return user;
   }
   catch(err) {
     throw err;
