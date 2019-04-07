@@ -196,11 +196,10 @@ app.post('/users/login', async (req, res) => {
 // remove a token aka logout
 app.delete('/users/auth/token', authenticated, async (req, res) => {
   try {
-  const user = await User.findByTokenAndDelete(req.header('x-auth')).catch(err => { throw err });
+  const user = await req.user.removeToken(req.header('x-auth')).catch(err => { throw err });
   
     res.status(200).send({
-      message: 'logout was successful',
-      user,
+      message: 'logout was successful'
     });
   }
   catch(err) {

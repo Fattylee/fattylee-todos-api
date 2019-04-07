@@ -590,6 +590,23 @@ describe('Test authenticated middleware', () => {
   }); // end it
 }); // end /users/auth
 
+//logout route
+describe('DELETE /users/auth/token', () => {
+  it('should logout a login user', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
+    request(app)
+      .delete('/users/auth/token')
+      .expect(200)
+      .set('x-auth', token)
+      .end((err, res) => {
+        if(err) return done(err);
+        
+        expect(res.body.message).toBe('logout was successful');
+        done();
+      });
+  }); // end it
+}); // End DELETE /users/auth/token
+
 describe('404 Error Page', () => {
   it('should redirect to 404 Error Page for unknown route', () => {
     request(app)
