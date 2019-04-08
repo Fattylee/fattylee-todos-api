@@ -96,13 +96,7 @@ UserSchema.methods.generateAuthToken = async function () {
 UserSchema.methods.removeToken = async function (token) {
   try {
     const user = this;
-    /*
-    const { tokens } = user;
-    const filteredTokens = tokens.filter(eachToken =>  eachToken.token !== token );
-    user.tokens.splice(0, user.tokens.length, ...filteredTokens);
-  const newUser = await user.save().catch(err => {throw err})
-    return newUser;
-    */
+    
     return user.updateOne({
       $pull: {
         tokens: { token,}

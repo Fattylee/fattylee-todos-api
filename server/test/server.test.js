@@ -60,14 +60,14 @@ describe('GET /todos/:id', () => {
           .catch(err => done(err));
   }); // end it
   
-  it('should return 404 for invalid id: GET /todos/123', done => {
+  it('should return 400 for invalid id: GET /todos/123', done => {
     request(app)
       .get('/todos/123')
       .set('x-auth', token)
-      .expect(404)
+      .expect(400)
       .end((err, res) => {
         if(err) return done(err);
-          expect(res.body.message).toBe('Invalid todo id:123');
+          expect(res.body.message).toBe('Invalid todo id');
         done();
       });
   }); //end it
@@ -79,10 +79,22 @@ describe('GET /todos/:id', () => {
       .set('x-auth', token)
       .expect(404)
       .expect(res => {
-        expect(res.body.message).toBe('todo item not found: ' + validID);
+        expect(res.body.message).toBe('todo item not found');
       })
       .end(done);
   }); // end it
+  it('should return 404 for a valid todo not created by the user', done => {
+    const [, { _id } ] = todoPayload;
+    request(app)
+      .get('/todos/' + _id)
+      .set('x-auth', token)
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('todo item not found');
+        done();
+      });
+  }); //end it
 }); // end GET /todos/:id
 
 describe('POST /todos', () => {

@@ -44,14 +44,12 @@ app.get('/todos', authenticated, (req, res) => {
     
 });
 
-app.get('/todos/:id', authenticated, (req, res) => {
+app.get('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
   const {id} = req.params;
-  
-  if(!ObjectID.isValid(id)) return res.status(404).json({ message: 'Invalid todo id:' + id});
   
   Todo.findOne({_id: id, _owner: req.user._id})
     .then(todo => {
-      if(!todo) return res.status(404).send({ message: 'todo item not found: ' + id});
+      if(!todo) return res.status(404).send({ message: 'todo item not found'});
       
       res.status(200).send({todo});
     })
