@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const app = require('../server');
 const jwt = require('jsonwebtoken');
 
@@ -15,6 +13,7 @@ const { userPayload, todoPayload, populateDB, plainPassword, plainPassword2 } = 
 
 beforeEach(populateDB);
 
+
 describe('Home page route GET /', () => {
     it('should GET /', (done) => {
     request(app)
@@ -29,11 +28,13 @@ describe('Home page route GET /', () => {
 
 describe('GET /todos', () => {
   it('should get all todos GET /todos', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
     request(app)
       .get('/todos')
+      .set('x-auth', token)
       .expect(200)
       .expect(res => {
-        expect(res.body.todos.length).toBe(2);
+        expect(res.body.todos.length).toBe(1);
       })
       .end((err, res) => {
         if (err) return done(err);
@@ -43,10 +44,12 @@ describe('GET /todos', () => {
 }); //End GET /todos
 
 describe('GET /todos/:id', () => {
+  const [{tokens: [{token}]}] = userPayload;
   it('should get a todo by id: GET /todos/id', (done) => {
       const id = todoPayload[0]._id.toHexString();
       request(app)
         .get(`/todos/${id}`)
+        .set('x-auth', token)
         .expect(200)
         .then(todo => {
           expect(todo.body.todo.text).toBe(todoPayload[0].text);
@@ -55,13 +58,14 @@ describe('GET /todos/:id', () => {
           .catch(err => done(err));
   }); // end it
   
-  it('should return 404 for invalid id: GET /todos/123', done => {
+  it('should return 400 for invalid id: GET /todos/123', done => {
     request(app)
       .get('/todos/123')
-      .expect(404)
+      .set('x-auth', token)
+      .expect(400)
       .end((err, res) => {
         if(err) return done(err);
-          expect(res.body.message).toBe('Invalid todo id:123');
+          expect(res.body.message).toBe('Invalid todo id');
         done();
       });
   }); //end it
@@ -70,57 +74,71 @@ describe('GET /todos/:id', () => {
     const validID = new ObjectID().toString();
     request(app)
       .get('/todos/' + validID)
+      .set('x-auth', token)
       .expect(404)
       .expect(res => {
-        expect(res.body.message).toBe('todo item not found: ' + validID);
+        expect(res.body.message).toBe('todo item not found');
       })
       .end(done);
   }); // end it
+  it('should return 404 for a valid todo not created by the user', done => {
+    const [, { _id } ] = todoPayload;
+    request(app)
+      .get('/todos/' + _id)
+      .set('x-auth', token)
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('todo item not found');
+        done();
+      });
+  }); //end it
 }); // end GET /todos/:id
 
 describe('POST /todos', () => {
-  it('should create a todo: POST /todos', async () => {
-    const payload = {
-      text: 'look for kali-termux'
-    };
+  const [{tokens: [{token}]}] = userPayload;
+  it('should create a todo: POST /todos', (done) => {
     request(app)
       .post('/todos')
-      .send(payload)
+      .send({text: todoPayload[0].text})
+      .set('x-auth', token)
       .expect(201)
-      .expect((res) => {
-        res.body.text = 'Abu payload';
-        expect(res.body.text).toBe('Abu payload');
+      .expect(async (res) => {
+         expect(res.body.todo.text).toBe(todoPayload[0].text);
+         expect(res.body.todo._owner).toEqual(todoPayload[0]._owner.toString());
+       const todos = await Todo.find().catch(done);
+       expect(todos.length).toBe(3)
       })
-      .end((err, res) => {
-        if(err) return console.error(err);
-      });
-      }); // end it
+      .end(done)
+    }); // end it
       
-  it('should not create a new todo: POST /todos', (done) => {
+  it('should not create a new todo when payload is empty', (done) => {
     request(app)
       .post('/todos')
       .send({})
+      .set('x-auth', token)
       .expect(400)
       .end((err, res) => {
         if(err) return done(err);
           Todo.countDocuments().then(count => {
             expect(count).toBe(2);
             done();
-          }).catch( err => done(err));
+          }).catch(done);
       });
   }); // end it
-  
 }); // end POST /todos
 
   describe('DELETE /todos/id', () => {
+    const [{tokens: [{token}]}] = userPayload;
     it('should delete a todo: DELETE /todos/id', (done) => {
       const { _id } = todoPayload[0];
       request(app)
         .delete('/todos/' + _id)
+        .set('x-auth', token)
         .expect(200)
         .end((err, res) => {
           if(err) return done(err);
-           expect(res.body._id).toBe(_id.toString());
+          expect(res.body._id).toBe(_id.toString());
           done();
         });
     }); // end it
@@ -128,6 +146,7 @@ describe('POST /todos', () => {
     it('should not delete a todo with invalidID: DELETE /todos/id', (done) => {
       request(app)
         .delete('/todos/123')
+        .set('x-auth', token)
         .expect(400)
         .end((err, res) => {
           if(err) return done(err);
@@ -141,6 +160,7 @@ describe('POST /todos', () => {
       const _id = new ObjectID();
       request(app)
         .delete('/todos/' + _id)
+        .set('x-auth', token)
         .expect(404)
         .end((err, res) => {
           if(err) return done(err);
@@ -152,26 +172,29 @@ describe('POST /todos', () => {
 });// End DELETE todos/:id
 
 describe('PATCH /todos/id', () => {
-  it('should update a todo succesdully: PATCH /todos/id', async () => {
+  const [{tokens: [{token}]}] = userPayload;
+  it('should update a todo succesdully: PATCH /todos/id', (done) => {
     request(app)
       .patch('/todos/' + todoPayload[0]._id)
-        .send({ completed: true, text: 'visit the masjid by 12noon' })
-        .expect(200)
-        .end((err, res) => {
-          if(err) return console.error(err);
+      .set('x-auth', token)
+      .send({ completed: true, text: 'visit the masjid by 12noon' })
+      .expect(200)
+      .end((err, res) => {
+        if(err) return done(err);
           expect(res.body.todo.completed).toBeTruthy();
-          expect(res.body.todo.text).toMatch(/VISIT/i);
+        expect(res.body.todo.text).toMatch(/VISIT/i);
           expect(res.body.todo.completedAt).toBeGreaterThan(0);
+          done();
         });
     }); // end it
     
-    it('should return 404 for invalid todoId: PATCH /todos/123', (done) => {
+    it('should return 400 for invalid todoId: PATCH /todos/123', (done) => {
       request(app)
         .patch('/todos/123')
+        .set('x-auth', token)
         .expect(400)
         .then(res => {
           expect(res.body.message).toContain('Invalid');
-          expect(null).toBeNull();
           done();
         })
         .catch( err => done(err));
@@ -180,9 +203,10 @@ describe('PATCH /todos/id', () => {
     it('should return 404 for todoId that is not in the db: PATCH /todos/id', (done) => {
       request(app)
         .patch('/todos/' + new ObjectID().toHexString())
+        .set('x-auth', token)
         .expect(404)
         .expect( res => {
-          expect(res.body.message).toMatch(/not found/);
+          expect(res.body.error.message).toMatch(/not found/);
         })
         .end(done);
     }); // end it
@@ -190,6 +214,7 @@ describe('PATCH /todos/id', () => {
     it('should clear completedAt when todo is not completed', (done) => {
       request(app)
         .patch('/todos/' + todoPayload[0]._id)
+        .set('x-auth', token)
         .send({ completed: false })
         .expect(200)
         .expect( res => {
@@ -201,6 +226,7 @@ describe('PATCH /todos/id', () => {
     it('should return completedAt greater than zero when todo is completed', (done) => {
       request(app)
         .patch('/todos/' + todoPayload[0]._id)
+        .set('x-auth', token)
         .send({ completed: true })
         .expect(200)
         .expect( res => {
@@ -208,15 +234,41 @@ describe('PATCH /todos/id', () => {
         })
         .end(done);
     }); // end it
+    it('should not update a todo that is not created by a user', (done) => {
+      const [, , {tokens: [{token}]}] = userPayload;
+      request(app)
+        .patch('/todos/' + todoPayload[0]._id)
+        .set('x-auth', token)
+        .send({ completed: true })
+        .expect(404)
+        .expect( res => {
+          expect(res.body.error.message).toMatch(/not found/);
+        })
+        .end(done);
+    }); // end it
 }); // End PATCH todos/:id
 
 describe('GET /users', () => {
-    it('should get all users: GET /users', (done) => {
+    
+    it('should return 401 for non admin user', (done) => {
+       const [, , {tokens: [{token}]}] = userPayload;
+       request(app)
+        .get('/users')
+        .expect(401)
+        .set('x-auth', token)
+        .expect((res) => {
+          expect(res.body.message).toBe('no admin priviledge');
+        })
+        .end(done);
+    }); // end it
+    it('should get all users for an admin user', (done) => {
+       const [{tokens: [{token}]}] = userPayload;
        request(app)
         .get('/users')
         .expect(200)
+        .set('x-auth', token)
         .expect((res) => {
-          expect(res.body.users.length).toBe(2);
+          expect(res.body.users.length).toBe(3);
         })
         .end(done);
     }); // end it
@@ -225,11 +277,17 @@ describe('GET /users', () => {
 
 
 describe('DELETE /users', () => {
+  const [{tokens: [{token}]}] = userPayload;
   it('should delete all users in the db', (done) => {
     request(app)
       .delete('/users')
       .send({ key: process.env.SUPER_USER_KEY })
+      .set('x-auth', token)
       .expect(200)
+      .expect(async res => {
+        const users = await User.find().catch(done);
+        expect(users.length).toBeFalsy();
+      })
       .end((err, res) => {
         if(err) return done(err);
         expect(res.body.message).toBe('all users deleted');
@@ -239,6 +297,7 @@ describe('DELETE /users', () => {
     it('should not delete users in the db if key is not supplied', (done) => {
     request(app)
       .delete('/users')
+      .set('x-auth', token)
       .expect(400)
       .end((err, res) => {
         if(err) return done(err);
@@ -249,11 +308,25 @@ describe('DELETE /users', () => {
     it('should not delete users in the db if key is invalid', (done) => {
     request(app)
       .delete('/users')
+      .set('x-auth', token)
       .send({ key: 'vvgvv' })
       .expect(401)
       .end((err, res) => {
         if(err) return done(err);
         expect(res.body.error.message).toBe('Invalid key');
+          done();
+        });
+    }); // end it
+    it('should not delete users in the db if user is not an admin', (done) => {
+      const [, , {tokens: [{token}]}] = userPayload;
+    request(app)
+      .delete('/users')
+      .set('x-auth', token)
+      .send({ key: process.env.SUPER_USER_KEY })
+      .expect(401)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.message).toBe('no admin priviledge');
           done();
         });
     }); // end it
@@ -274,25 +347,26 @@ describe('POST /users', () => {
        
        expect(res.header['x-auth']).toBeTruthy(); expect(res.body.user.email).toBe('lakers@yahoo.com');
        User.find().then(data => {
-         expect(data.length).toBe(3);
+         expect(data.length).toBe(4);
        expect(data[2].password).not.toBe(payload.password);
        done();
        }).catch( err => done(err));
       }).
       catch(done);
   }); // End it
-  it('should not create a new user when payload is empty', async () => {
+  it('should not create a new user when payload is empty', (done) => {
     request(app)
       .post('/users')
       .send()
       .expect(400)
       .end(async (err, res) => {
-        if(err) return console.error(err);
+        if(err) return done(err);
         
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error.length).toBe(2);
-        const users = await User.find().catch(console.error);
-        expect(users.length).toBe(2);
+        const users = await User.find().catch(done);
+        expect(users.length).toBe(3);
+        done();
       });
   }); // End it
   it('should not create a new user when email is invalid', async () => {
@@ -311,7 +385,7 @@ describe('POST /users', () => {
         expect(res.body.error[0].message).toMatch('must be a valid email')
         expect(res.body.error.length).toBe(1);
         const count = await User.countDocuments().catch(console.error);
-        expect(count).toBe(2);
+        expect(count).toBe(3);
       });
   }); // End it
   it('should not create a new user when email already exist', (done) => {
@@ -325,7 +399,7 @@ describe('POST /users', () => {
           expect(res.body.error).toBe('email already exist');
         expect(res.body.error).toBeTruthy();
         const users = await User.find().catch(console.error);
-        expect(users.length).toBe(2);     
+        expect(users.length).toBe(3);     
         done();
       })
       .catch(done);
@@ -358,7 +432,7 @@ describe('AUTH Route: GET /users/auth', () => {
       });
   }); // end it
   it('should return 404 for a valid token that is not in the db', (done) => {
-    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123');
+    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, process.env.JWT_SECRETE);
     request(app)
       .get('/users/auth')
       .set('x-auth', token)
@@ -501,6 +575,58 @@ describe('POST /users/login', () => {
   }); // end it
   
 }); // end POST /users/login
+
+describe('Test authenticated middleware', () => {
+  it('should return authenticated user', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
+    request(app)
+      .get('/users/auth')
+      .set('x-auth', token)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.email).toBe('abc@gmail.com');
+      })
+      .end(done)
+  }); // end it
+  it('should return unauthorized for invalid token', (done) => {
+    let [{tokens: [{token}]}] = userPayload;
+    token = token.slice(0, -4) + '1234';
+    request(app)
+      .get('/todos')
+      .set('x-auth', token)
+      .expect(401)
+      .expect(res => {
+        expect(res.body.message).toBe('invalid signature');
+      })
+      .end(done);
+  }); // end it
+  it('should return 401 for empty token', (done) => {
+    request(app)
+      .get('/todos')
+      .expect(401)
+      .expect(res => {
+        expect(res.body.error[0].message).toBe('"x-auth Header" is required');
+      })
+      .end(done);
+  }); // end it
+}); // end /users/auth
+
+//logout route
+describe('DELETE /users/auth/token', () => {
+  it('should logout a login user', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
+    request(app)
+      .delete('/users/auth/token')
+      .expect(200)
+      .set('x-auth', token)
+      .end((err, res) => {
+        if(err) return done(err);
+        
+        expect(res.body.message).toBe('logout was successful');
+        done();
+      });
+  }); // end it
+}); // End DELETE /users/auth/token
 
 describe('404 Error Page', () => {
   it('should redirect to 404 Error Page for unknown route', () => {

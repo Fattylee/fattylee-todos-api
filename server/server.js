@@ -9,10 +9,11 @@ const path = require('path');
 
 
 const mongoose = require('./mongoose');
-const Todo = require('./models/todo').Todo;
+const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
-const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
+const { logger, validateTodoUpdate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');
+const { validateTodo, validateTodoIdParams, isAdmin, validateKey } = require('./middleware/validators');
 const bcrypt = require('bcryptjs');
 
 
@@ -31,8 +32,8 @@ app.use('/', (req, res, next) => {
 
 app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
-app.get('/todos', (req, res) => {
-  Todo.find()
+app.get('/todos', authenticated, (req, res) => {
+  Todo.find({_owner: req.user._id})
     .sort('text')
     //.select('text -_id')
     .then(docs => {
@@ -43,94 +44,78 @@ app.get('/todos', (req, res) => {
     
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
   const {id} = req.params;
   
-  if(!ObjectID.isValid(id)) return res.status(404).json({ message: 'Invalid todo id:' + id});
-  
-  Todo.findById(id)
+  Todo.findOne({_id: id, _owner: req.user._id})
     .then(todo => {
-      if(!todo) return res.status(404).send({ message: 'todo item not found: ' + id});
+      if(!todo) return res.status(404).send({ message: 'todo item not found'});
       
       res.status(200).send({todo});
     })
     .catch(err => res.send(err));
 });
 
-app.post('/todos', (req, res) => {
-  
-  Joi.validate(
-    req.body,
-    Joi.object().keys({text: Joi.string().min(5).trim().required()}))
-  .then( value => {
+app.post('/todos', authenticated, validateTodo, async (req, res) => {
+  try {
+    const doc = await Todo.insertMany({
+    text: req.payload.text,
+    _owner: req.user._id,
+    }).catch(err => { throw err });
     
-    Todo.insertMany({
-    text: req.body.text,
-    completed: false,
-    completedAt: null
-  })
-    .then(doc => {
-      res.status(201).send(doc[0]);
-    })
-    .catch(err => {
-      res.status(400).send(err);
-    })
-  })
-  .catch( err => {
-    const error = formatError(err); 
-    res.status(400).send(error)
-  })
+    res.status(201).send({todo: doc[0]});
+  
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(err.statusCode || 500 ).send({error: err.message || err });
+    }
   
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
   const { id } = req.params;
   
-  if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
-  
-  Todo.findByIdAndDelete(id)
+  Todo.findOneAndDelete({_id: id, _owner: req.user._id})
     .then(doc => {
       if(!doc) return res.status(404).send({message: 'Todo not found'});
-      
       res.status(200).send(doc)
     })
     .catch(err => res.send(err));
 });
 
-app.patch('/todos/:id', (req, res) => {
-  
-  validate(req.body)
-  .then(result => {
+app.patch('/todos/:id', authenticated, validateTodoIdParams, async (req, res) => {
+  try {
+    let value = await validateTodoUpdate(req.body).catch(err => { throw err });
     
-  const { id } = req.params;
-  
-   if(!ObjectID.isValid(id)) return res.status(400).send({ message: 'Invalid todo id'});
-   if(req.body.completed === false)
-     req.body.completedAt = null;
-   
-   if(req.body.completed) {
-     req.body.completedAt = new Date().getTime();
-   }
-   
-  
-  Todo.findOneAndUpdate({_id: id}, req.body, {useFindAndModify: false, new: true})
-    .then(doc => {
+    const { id } = req.params;
+    
+    value.completedAt = value.completed ? new Date().getTime() : null;
+    
+    const doc = await Todo.findOneAndUpdate({_id: id, _owner: req.user._id}, value, {useFindAndModify: false, new: true}).catch(err => { throw err });
+    
+    if(!doc) throw { statusCode: 404, message: 'Todo not found'};
+        
+    res.status(200).send({todo: doc});
+  }
+  catch(err) {
+    // save all error messages to .error.log
+      saveLog(err);
+    
+      if(err.details) return res.status(400).send(formatError(err));
       
-      if(!doc) return res.status(404).send({ message: 'Todo not found'});
-      
-      res.status(200).send({todo: doc});
-    })
-    .catch(err => res.send(err));
-  })
-  .catch(err => {
-    
-    const error = formatError(err);
-    
-    res.status(400).send(error);
-    });
+    res.status(err.statusCode || 500 ).send({
+      error: {
+        message: err.message || err,
+        }
+        
+        });
+    };
 });
 
-app.get('/users', async (req, res) => {
+app.get('/users', authenticated, isAdmin, async (req, res) => {
   try {
     const users = await User.find();
     users.reverse();
@@ -140,21 +125,13 @@ app.get('/users', async (req, res) => {
   }
 })
 
-app.delete('/users', async (req, res) => {
+app.delete('/users', authenticated, isAdmin, validateKey, async (req, res) => {
   
   try {
-    const value = await Joi.validate(req.body, Joi.object().options({ abortEarly: false }).keys({
-      key: Joi.string().trim().required(),
-    })).catch( err => { throw err });
-    
-    if(value.key !== process.env.SUPER_USER_KEY)  throw { statusCode:401, message: 'Invalid key' };
-    
   await User.deleteMany().catch( err => { throw err });
     res.status(200).send({ message: 'all users deleted'});
   }
   catch(err) {
-    if(err.details) return res.status(400).send(formatError(err));
-    
     res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
   }
 });
@@ -214,20 +191,15 @@ app.post('/users/login', async (req, res) => {
 // remove a token aka logout
 app.delete('/users/auth/token', authenticated, async (req, res) => {
   try {
-  //  const user = await user.findByTokenAndDelete(token);
-  const { tokens } = req.user;
-  const token = req.header('x-auth');
-  const filteredTokens = tokens.filter(eachToken =>  eachToken.token !== token );
-  req.user.tokens.splice(0, req.user.tokens.length, ...filteredTokens);
-  const user = await req.user.save().catch(err => {throw err})
-    
+  const user = await req.user.removeToken(req.header('x-auth')).catch(err => { throw err });
+  
     res.status(200).send({
-      message: 'logout was successful',
-      user,
+      message: 'logout was successful'
     });
   }
   catch(err) {
-    console.error(err);
+    // save all error messages to .error.log
+      saveLog(err);
     
     res.status(500).send({message: err.message || err, stack: err.stack || err });
   }

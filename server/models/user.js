@@ -19,6 +19,10 @@ const UserSchema = new mongoose.Schema({
    required: true,
    minlength: 4,
  },
+ isAdmin: {
+   type: Boolean,
+   default: false,
+ },
  tokens: [
    {
      access: {
@@ -51,7 +55,7 @@ UserSchema.statics.findByToken = function (token) {
   const User = this;
   let decoded = undefined;
   try {
-  decoded = jwt.verify(token, 'haleemah123');
+  decoded = jwt.verify(token, process.env.JWT_SECRETE);
   } catch( err ) { throw { statusCode: 401, error: err }}
   
   const { _id } = decoded;
@@ -82,17 +86,22 @@ UserSchema.methods.toJSON = function () {
 UserSchema.methods.generateAuthToken = async function () {
   const user = this;
   const access = 'auth';
-  const token = jwt.sign({ _id: user._id.toString(), access }, 'haleemah123');
+  const token = jwt.sign({ _id: user._id.toString(), access }, process.env.JWT_SECRETE);
   user.tokens = [...user.tokens, {access,token}];
   
   await user.save().catch( err => { throw err });
   return token;
 };
 
-UserSchema.methods.findByTokenAndDelete = async function (token, oldUser) {
+UserSchema.methods.removeToken = async function (token) {
   try {
     const user = this;
     
+    return user.updateOne({
+      $pull: {
+        tokens: { token,}
+      }
+    });
   }
   catch(err) {
     throw err;

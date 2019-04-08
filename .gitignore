@@ -3,4 +3,4 @@ note.log
 gitcheatsheet.txt
 .error.log
 playground/bash-cheatsheet.txt
-.env
+server/config/config.json

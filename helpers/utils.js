@@ -14,7 +14,7 @@ const logger = (req, res, next) => {
   next();
 };
 
-const validate = (body) => {
+const validateTodoUpdate = (body) => {
 const schema = Joi.object().options({ abortEarly: false }).keys({
   
   text: Joi.string().trim().min(5),
@@ -31,6 +31,8 @@ const validateUser = (body) =>
   Joi.validate(body, Joi.object().options({ abortEarly: false }).keys({
         email: Joi.string().trim().email({ minDomainAtoms: 2 }).min(5).lowercase().required(),
         password: Joi.string().trim().min(4).required(),
+        //uncomment to add a new admin while setting the field "isAdmin" to true
+        //isAdmin: Joi.boolean(),
       }))
     );
 const formatError = (err) => {
@@ -46,6 +48,7 @@ const validateHeader = (header) => {
       header: Joi.string().trim().required().label('x-auth Header'),
     })));
 };
+
 const saveLog = (err) => {
   fs.appendFile('.error.log', (err.stack || format(err)) + '\n='.padEnd(50, '=') + '\n '
   , err => { if(err) console.error(err.error); });
@@ -53,7 +56,7 @@ const saveLog = (err) => {
 module.exports = {
   filePath,
   logger,
-  validate,
+  validateTodoUpdate,
   formatError,
   validateUser,
   format,
