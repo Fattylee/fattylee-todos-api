@@ -5,11 +5,9 @@ const { Todo } = require('../../models/todo');
 const { User } = require('../../models/user');
 const { format } = require('../../../helpers/utils');
 
-
 const _id = new ObjectID();
 const id2 = new ObjectID();
 const id3 = new ObjectID();
-const secrete = 'haleemah123';
 const access = 'auth';
 const plainPassword = 'password1';
 const plainPassword2 = 'password2';
@@ -23,7 +21,7 @@ const userPayload = [
   isAdmin: true,
   tokens: [{
     access,
-    token: jwt.sign({_id, access }, secrete),
+    token: jwt.sign({_id, access }, process.env.JWT_SECRETE),
     _id: new ObjectID(),
     }]  
   },
@@ -41,7 +39,7 @@ const userPayload = [
   isAdmin: false,
   tokens: [{
     access,
-    token: jwt.sign({_id: id3, access }, secrete),
+    token: jwt.sign({_id: id3, access }, process.env.JWT_SECRETE),
     _id: new ObjectID(),
     }]  
   },

@@ -9,7 +9,7 @@ const path = require('path');
 
 
 const mongoose = require('./mongoose');
-const Todo = require('./models/todo').Todo;
+const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
 const { logger, validateTodoUpdate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');

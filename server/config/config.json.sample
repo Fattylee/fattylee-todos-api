@@ -1,0 +1,20 @@
+{
+  "test": {
+    "PORT": set_port_no,
+    "MONGOLAB_URI": "mongodb://127.0.0.1/dbName_here",
+    "JWT_SECRETE": "any_random_string",
+    "SUPER_USER_KEY": "any_random_string"
+  },
+  "development": {
+   "PORT": set_port_no,
+    "MONGOLAB_URI": "mongodb://127.0.0.1/dbName_here",
+    "JWT_SECRETE": "any_random_string",
+    "SUPER_USER_KEY": "any_random_string"
+  },
+  "staging": {
+    "PORT": set_port_no,
+    "MONGOLAB_URI": "mongodb://127.0.0.1/dbName_here",
+    "JWT_SECRETE": "any_random_string",
+    "SUPER_USER_KEY": "any_random_string"
+  }
+}

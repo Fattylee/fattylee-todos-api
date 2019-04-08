@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const app = require('../server');
 const jwt = require('jsonwebtoken');
 
@@ -236,6 +234,18 @@ describe('PATCH /todos/id', () => {
         })
         .end(done);
     }); // end it
+    it('should not update a todo that is not created by a user', (done) => {
+      const [, , {tokens: [{token}]}] = userPayload;
+      request(app)
+        .patch('/todos/' + todoPayload[0]._id)
+        .set('x-auth', token)
+        .send({ completed: true })
+        .expect(404)
+        .expect( res => {
+          expect(res.body.error.message).toMatch(/not found/);
+        })
+        .end(done);
+    }); // end it
 }); // End PATCH todos/:id
 
 describe('GET /users', () => {
@@ -422,7 +432,7 @@ describe('AUTH Route: GET /users/auth', () => {
       });
   }); // end it
   it('should return 404 for a valid token that is not in the db', (done) => {
-    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, 'haleemah123');
+    const token = jwt.sign({access: 'auth', _id: new ObjectID()}, process.env.JWT_SECRETE);
     request(app)
       .get('/users/auth')
       .set('x-auth', token)
