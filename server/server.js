@@ -11,7 +11,7 @@ const path = require('path');
 const mongoose = require('./mongoose');
 const Todo = require('./models/todo').Todo;
 const { User } = require('./models/user');
-const { logger, validate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
+const { logger, validateTodoUpdate, formatError, validateUser, format, saveLog } = require('./../helpers/utils');
 const { authenticated } = require('./middleware/authenticated');
 const { validateTodo, validateTodoIdParams, isAdmin, validateKey } = require('./middleware/validators');
 const bcrypt = require('bcryptjs');
@@ -86,36 +86,33 @@ app.delete('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
     .catch(err => res.send(err));
 });
 
-app.patch('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
-  
-  validate(req.body)
-  .then(result => {
+app.patch('/todos/:id', authenticated, validateTodoIdParams, async (req, res) => {
+  try {
+    let value = await validateTodoUpdate(req.body).catch(err => { throw err });
     
-  const { id } = req.params;
-  
-   if(req.body.completed === false)
-     req.body.completedAt = null;
-   
-   if(req.body.completed) {
-     req.body.completedAt = new Date().getTime();
-   }
-   
-  
-  Todo.findOneAndUpdate({_id: id, _owner: req.user._id}, req.body, {useFindAndModify: false, new: true})
-    .then(doc => {
+    const { id } = req.params;
+    
+    value.completedAt = value.completed ? new Date().getTime() : null;
+    
+    const doc = await Todo.findOneAndUpdate({_id: id, _owner: req.user._id}, value, {useFindAndModify: false, new: true}).catch(err => { throw err });
+    
+    if(!doc) throw { statusCode: 404, message: 'Todo not found'};
+        
+    res.status(200).send({todo: doc});
+  }
+  catch(err) {
+    // save all error messages to .error.log
+      saveLog(err);
+    
+      if(err.details) return res.status(400).send(formatError(err));
       
-      if(!doc) return res.status(404).send({ message: 'Todo not found'});
-      
-      res.status(200).send({todo: doc});
-    })
-    .catch(err => res.send(err));
-  })
-  .catch(err => {
-    
-    const error = formatError(err);
-    
-    res.status(400).send(error);
-    });
+    res.status(err.statusCode || 500 ).send({
+      error: {
+        message: err.message || err,
+        }
+        
+        });
+    };
 });
 
 app.get('/users', authenticated, isAdmin, async (req, res) => {

@@ -190,14 +190,13 @@ describe('PATCH /todos/id', () => {
         });
     }); // end it
     
-    it('should return 404 for invalid todoId: PATCH /todos/123', (done) => {
+    it('should return 400 for invalid todoId: PATCH /todos/123', (done) => {
       request(app)
         .patch('/todos/123')
         .set('x-auth', token)
         .expect(400)
         .then(res => {
           expect(res.body.message).toContain('Invalid');
-          expect(null).toBeNull();
           done();
         })
         .catch( err => done(err));
@@ -209,7 +208,7 @@ describe('PATCH /todos/id', () => {
         .set('x-auth', token)
         .expect(404)
         .expect( res => {
-          expect(res.body.message).toMatch(/not found/);
+          expect(res.body.error.message).toMatch(/not found/);
         })
         .end(done);
     }); // end it

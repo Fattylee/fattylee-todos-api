@@ -14,7 +14,7 @@ const logger = (req, res, next) => {
   next();
 };
 
-const validate = (body) => {
+const validateTodoUpdate = (body) => {
 const schema = Joi.object().options({ abortEarly: false }).keys({
   
   text: Joi.string().trim().min(5),
@@ -56,7 +56,7 @@ const saveLog = (err) => {
 module.exports = {
   filePath,
   logger,
-  validate,
+  validateTodoUpdate,
   formatError,
   validateUser,
   format,
