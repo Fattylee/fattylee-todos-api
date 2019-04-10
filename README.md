@@ -39,26 +39,46 @@ path:
  GET /todos  get all todos
  ```
  
- ```js
- POST /todos  create a todo
- ```
+```js
+POST /todos  create a todo
+```
+
+```js
+DELETE /todos/id  delete a todo
+```
+
+```js
+DELETE /todos  delete all todo
+```
  
-  ```js
- GET /users/  get all users 
- ```
+```js
+GET /users  get all users 
+```
  
- ```js
- POST /users  create a user
- ```
+```js
+POST /users  create a user
+```
+
+```js
+GET /todos/admin  get all todos
+```
+
+```js
+DELETE /users  delete all users 
+```
+
+```js
+DELETE /users/id  delete a user
+```
+
+```js
+GET /users/auth  get auth user
+```
  
- ```js
- DELETE /users  delete all users 
- ```
- 
- ```js
- GET /users/auth  get auth user
- ```
- 
-  ```js
- POST /users/login  user login
- ```
+```js
+POST /users/login  user login
+```
+
+```js
+DELETE /users/auth/token  logout a user 
+```

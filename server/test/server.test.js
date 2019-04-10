@@ -27,14 +27,29 @@ describe('Home page route GET /', () => {
 }); //end Home page
 
 describe('GET /todos', () => {
-  it('should get all todos GET /todos', (done) => {
+  it('should get all todos created by a user GET /todos', (done) => {
     const [{tokens: [{token}]}] = userPayload;
     request(app)
       .get('/todos')
       .set('x-auth', token)
       .expect(200)
       .expect(res => {
-        expect(res.body.todos.length).toBe(1);
+        expect(res.body.todos.length).toBe(2);
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+      });
+  }); // end it
+    it('should not return for a todo not created by a user', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
+    request(app)
+      .get('/todos')
+      .set('x-auth', token)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todos.length).toBe(2);
+        expect(res.body.todos[0].text).not.toBe(todoPayload[1].text);
       })
       .end((err, res) => {
         if (err) return done(err);
@@ -42,6 +57,37 @@ describe('GET /todos', () => {
       });
   }); // end it
 }); //End GET /todos
+
+describe('GET /todos/admin', () => {
+  it('should get all todos created by all users', (done) => {
+    const [{tokens: [{token}]}] = userPayload;
+    request(app)
+      .get('/todos/admin')
+      .set('x-auth', token)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todos.length).toBe(3);
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+      });
+  }); // end it
+  it('should return unauthorized for non admin user', (done) => {
+    const [, , {tokens: [{token}]}] = userPayload;
+    request(app)
+      .get('/todos/admin')
+      .set('x-auth', token)
+      .expect(401)
+      .expect(res => {
+        expect(res.body.error.message).toBe('no admin priviledge');
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+        done();
+      });
+  }); // end it
+}); //End GET /todos/admin
 
 describe('GET /todos/:id', () => {
   const [{tokens: [{token}]}] = userPayload;
@@ -65,7 +111,7 @@ describe('GET /todos/:id', () => {
       .expect(400)
       .end((err, res) => {
         if(err) return done(err);
-          expect(res.body.message).toBe('Invalid todo id');
+          expect(res.body.message).toBe('Invalid id');
         done();
       });
   }); //end it
@@ -77,7 +123,7 @@ describe('GET /todos/:id', () => {
       .set('x-auth', token)
       .expect(404)
       .expect(res => {
-        expect(res.body.message).toBe('todo item not found');
+        expect(res.body.error.message).toBe('todo item not found');
       })
       .end(done);
   }); // end it
@@ -89,7 +135,7 @@ describe('GET /todos/:id', () => {
       .expect(404)
       .end((err, res) => {
         if(err) return done(err);
-          expect(res.body.message).toBe('todo item not found');
+          expect(res.body.error.message).toBe('todo item not found');
         done();
       });
   }); //end it
@@ -107,7 +153,7 @@ describe('POST /todos', () => {
          expect(res.body.todo.text).toBe(todoPayload[0].text);
          expect(res.body.todo._owner).toEqual(todoPayload[0]._owner.toString());
        const todos = await Todo.find().catch(done);
-       expect(todos.length).toBe(3)
+       expect(todos.length).toBe(4)
       })
       .end(done)
     }); // end it
@@ -121,14 +167,14 @@ describe('POST /todos', () => {
       .end((err, res) => {
         if(err) return done(err);
           Todo.countDocuments().then(count => {
-            expect(count).toBe(2);
+            expect(count).toBe(3);
             done();
           }).catch(done);
       });
   }); // end it
 }); // end POST /todos
 
-  describe('DELETE /todos/id', () => {
+describe('DELETE /todos/id', () => {
     const [{tokens: [{token}]}] = userPayload;
     it('should delete a todo: DELETE /todos/id', (done) => {
       const { _id } = todoPayload[0];
@@ -151,7 +197,7 @@ describe('POST /todos', () => {
         .end((err, res) => {
           if(err) return done(err);
           
-          expect(res.body.message).toBe('Invalid todo id');
+          expect(res.body.message).toBe('Invalid id');
           done();
         });
     }); // end it
@@ -165,11 +211,29 @@ describe('POST /todos', () => {
         .end((err, res) => {
           if(err) return done(err);
           
-          expect(res.body.message).toBe('Todo not found');
+          expect(res.body.error.message).toBe('Todo not found');
           done();
         });
     }); // End it
 });// End DELETE todos/:id
+
+describe('DELETE /todos', () => {
+  
+  const [{tokens: [{token}]}] = userPayload;
+  it('should delete all todos', (done) => {
+    request(app)
+      .delete('/todos/')
+      .set('x-auth', token)
+      .expect(200)
+      .end(async (err, res) => {
+        if(err) return done(err);
+        expect(res.body.message).toBe('all todos deleted');
+        const todos = await Todo.find().catch(done);
+        expect(todos.length).toBe(1);
+          done();
+        });
+    }); // end it
+}); // end DELETE /todos
 
 describe('PATCH /todos/id', () => {
   const [{tokens: [{token}]}] = userPayload;
@@ -257,7 +321,7 @@ describe('GET /users', () => {
         .expect(401)
         .set('x-auth', token)
         .expect((res) => {
-          expect(res.body.message).toBe('no admin priviledge');
+          expect(res.body.error.message).toBe('no admin priviledge');
         })
         .end(done);
     }); // end it
@@ -286,11 +350,13 @@ describe('DELETE /users', () => {
       .expect(200)
       .expect(async res => {
         const users = await User.find().catch(done);
-        expect(users.length).toBeFalsy();
+        expect(users.length).toBe(1);
+        const todos = await Todo.find().catch(done);
+        expect(todos.length).toBe(2);
       })
       .end((err, res) => {
         if(err) return done(err);
-        expect(res.body.message).toBe('all users deleted');
+        expect(res.body.message).toBe('all non-admin users deleted');
           done();
         });
     }); // end it
@@ -326,7 +392,7 @@ describe('DELETE /users', () => {
       .expect(401)
       .end((err, res) => {
         if(err) return done(err);
-        expect(res.body.message).toBe('no admin priviledge');
+        expect(res.body.error.message).toBe('no admin priviledge');
           done();
         });
     }); // end it
@@ -441,7 +507,7 @@ describe('AUTH Route: GET /users/auth', () => {
         if(err) {
           return done(err);
         }
-        expect(user.body.message).toBe('user not found')
+        expect(user.body.error.message).toBe('token not found')
         done();
       });
   }); // end it
@@ -455,7 +521,7 @@ describe('AUTH Route: GET /users/auth', () => {
         if(err) {
           return done(err);
         }
-        expect(user.body.message).toBe('invalid signature')
+        expect(user.body.error.message).toBe('invalid signature')
         done();
       });
   }); // end it
@@ -469,7 +535,7 @@ describe('AUTH Route: GET /users/auth', () => {
         if(err) {
           return done(err);
         }
-        expect(user.body.message).toBe('invalid token');
+        expect(user.body.error.message).toBe('invalid token');
         done();
       });
   }); // end it
@@ -483,7 +549,7 @@ describe('AUTH Route: GET /users/auth', () => {
         if(err) {
           return done(err);
         }
-        expect(user.body.message).toBe('jwt malformed');
+        expect(user.body.error.message).toBe('jwt malformed');
         done();
       });
   }); // end it
@@ -596,7 +662,7 @@ describe('Test authenticated middleware', () => {
       .set('x-auth', token)
       .expect(401)
       .expect(res => {
-        expect(res.body.message).toBe('invalid signature');
+        expect(res.body.error.message).toBe('invalid signature');
       })
       .end(done);
   }); // end it

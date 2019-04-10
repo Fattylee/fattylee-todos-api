@@ -53,6 +53,14 @@ const saveLog = (err) => {
   fs.appendFile('.error.log', (err.stack || format(err)) + '\n='.padEnd(50, '=') + '\n '
   , err => { if(err) console.error(err.error); });
 }
+
+const validateSuperUserKey = (body) =>
+  (
+  Joi.validate(body, Joi.object().options({ abortEarly: false }).keys({
+        key: Joi.string().trim().required(),
+      }))
+);
+
 module.exports = {
   filePath,
   logger,
@@ -62,4 +70,5 @@ module.exports = {
   format,
   validateHeader,
   saveLog,
+  validateSuperUserKey,
 }

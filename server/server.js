@@ -20,7 +20,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 if(require('./config/config') === 'development')
 app.use(logger);
@@ -32,28 +32,51 @@ app.use('/', (req, res, next) => {
 
 app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
-app.get('/todos', authenticated, (req, res) => {
-  Todo.find({_owner: req.user._id})
-    .sort('text')
-    //.select('text -_id')
-    .then(docs => {
-      res.status(200).send({todos: docs});
-    },
-    
-    err => console.error(err));
-    
+app.get('/todos', authenticated, async (req, res) => {
+  try {
+    const todos = await Todo.find({_owner: req.user._id});
+    todos.reverse();
+    res.status(200).send({ todos });
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(500).send({error: {message: err.message || err }});
+    }
 });
 
-app.get('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
-  const {id} = req.params;
-  
-  Todo.findOne({_id: id, _owner: req.user._id})
-    .then(todo => {
-      if(!todo) return res.status(404).send({ message: 'todo item not found'});
+app.get('/todos/admin', authenticated, isAdmin, async (req, res) => {
+  try {
+    const todos = await Todo.find();
+    todos.reverse();
+    res.status(200).send({ todos });
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
       
-      res.status(200).send({todo});
-    })
-    .catch(err => res.send(err));
+    res.status(500).send({error: {message: err.message || err }});
+    }
+});
+
+app.get('/todos/:id', authenticated, validateTodoIdParams, async (req, res) => {
+  try {
+    const {id} = req.params;
+  
+    const todo = await Todo.findOne({_id: id, _owner: req.user._id}).catch(err => {throw err});
+    
+    if(!todo) throw {statusCode: 404, message: 'todo item not found'};
+      
+    res.status(200).send({todo});
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(err.statusCode || 500 ).send({error: {message: err.message || err }});
+    }
+    
 });
 
 app.post('/todos', authenticated, validateTodo, async (req, res) => {
@@ -70,20 +93,37 @@ app.post('/todos', authenticated, validateTodo, async (req, res) => {
       // save all error messages to .error.log
       saveLog(err);
       
-    res.status(err.statusCode || 500 ).send({error: err.message || err });
+    res.status(err.statusCode || 500 ).send({error: { message: err.message || err }});
     }
-  
 });
 
-app.delete('/todos/:id', authenticated, validateTodoIdParams, (req, res) => {
-  const { id } = req.params;
-  
-  Todo.findOneAndDelete({_id: id, _owner: req.user._id})
-    .then(doc => {
-      if(!doc) return res.status(404).send({message: 'Todo not found'});
-      res.status(200).send(doc)
-    })
-    .catch(err => res.send(err));
+app.delete('/todos/:id', authenticated, validateTodoIdParams, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const doc = await Todo.findOneAndDelete({_id: id, _owner: req.user._id}).catch(err => {throw err});
+    if(!doc) throw {statusCode: 404, message: 'Todo not found'};
+    res.status(200).send(doc);
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(err.statusCode || 500 ).send({error: { message: err.message || err }});
+    }
+});
+
+app.delete('/todos/', authenticated, async (req, res) => {
+  try {
+    const doc = await Todo.deleteMany({ _owner: req.user._id }).catch(err => {throw err});
+    
+    res.status(200).send({message: 'all todos deleted'});
+  }
+  catch(err) {
+      // save all error messages to .error.log
+      saveLog(err);
+      
+    res.status(err.statusCode || 500 ).send({error: { message: err.message || err }});
+    }
 });
 
 app.patch('/todos/:id', authenticated, validateTodoIdParams, async (req, res) => {
@@ -128,8 +168,26 @@ app.get('/users', authenticated, isAdmin, async (req, res) => {
 app.delete('/users', authenticated, isAdmin, validateKey, async (req, res) => {
   
   try {
-  await User.deleteMany().catch( err => { throw err });
-    res.status(200).send({ message: 'all users deleted'});
+    const users = await User.find({ isAdmin: true }).catch(err => { throw err });
+    const ids = users.map(user => user._id);
+    await Promise.all([ User.deleteMany({ isAdmin: false }), Todo.deleteMany({_owner: { $nin: ids }})]).catch(err => { throw err });
+    
+    res.status(200).send({ message: 'all non-admin users deleted'});
+  }
+  catch(err) {
+    res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
+  }
+});
+
+app.delete('/users/:id', authenticated, isAdmin, validateTodoIdParams, validateKey, async (req, res) => {
+  
+  try {
+    const { id: _id } = req.params;
+    const user = await User.findOneAndDelete({ _id, }).catch( err => { throw err });
+    if(!user) throw { statusCode: 404, message: 'user not found'};
+    const todos = await Todo.deleteMany({_owner: _id}).catch(err => { throw err });
+    
+    res.status(200).send({ message: 'user deleted'});
   }
   catch(err) {
     res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
