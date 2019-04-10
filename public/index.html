@@ -68,16 +68,22 @@ span.animated { animation-delay: 7s }
   <h2 class="animated rollIn delay-2s">Api Docs</h2>
   
   <ul class="animated zoomIn delay-3s">
-  	<li><span class="animated infinite heartBeat">GET /todos</span>	get all todos</li>
-  	<li><span class="animated infinite jello slower">GET /todos/todoId</span>  get a todo by ID</li>
+  	<li><span class="animated infinite heartBeat">GET /todos</span>	get all todos for a given user</li>
+  	<li><span class="animated infinite tada slower">GET /todos/todoId</span>  get a todo by ID</li>
+  <li><span class="animated infinite flash slower">GET /todos/admin</span>  get all todos</li>	
+  	<li><span class="animated infinite flash">DELETE /todos/todoId</span>	delete a todo</li>
+  	
+  	app.get('/todos/admin',
+  	<li><span class="animated infinite shake slower">DELETE /users</span>  delete all users</li>
+  		<li><span class="animated infinite jello slower">DELETE /users/userId</span>  delete a user</li>
   	<li><span class="animated infinite heartBeat">POST /todos</span> create a todo</li>
   	<li><span class="animated infinite wobble slower">PATCH /todos/todoId</span> update a todo</li>
-  	 		<li><span class="animated infinite tada">GET /users</span>	get all users</li>
+  	<li><span class="animated infinite tada">GET /users</span>	get all users</li>
   	<li><span class="animated infinite flash">POST /users</span> create a user</li>
-  	
   		<li><span class="animated infinite heartBeat">DELETE /users</span>	delete all users</li>
   	<li><span class="animated infinite slow shake">GET /users/auth</span> get auth user (requires a valid token) </li>
   	<li><span class="animated infinite rubberBand">POST /users/login</span>	user login</li>
+  	<li><span class="animated infinite heartBeat">DELETE /users/auth/token</span> logout a user</li>
   </ul>
 </div>
 

@@ -30,6 +30,7 @@ const userPayload = [
   email: 'abcvh@gmail.com',
   password: bcrypt.hashSync(plainPassword2, 10),
   _id: id2,
+  isAdmin: false,
   },
   {
   __v: 0,
@@ -55,6 +56,11 @@ const todoPayload = [
   text: 'todo item 2',
   _id: new ObjectID(),
   _owner: id2,
+},
+{
+  text: 'todo item 3',
+  _id: new ObjectID(),
+  _owner: _id,
 }
 ];
 

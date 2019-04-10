@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const { ObjectID } = require('mongodb');
-const { formatError, saveLog } = require('../../helpers/utils');
+const { formatError, saveLog, format, validateSuperUserKey } = require('../../helpers/utils');
 const { User } = require('../models/user')
 
 const validateTodo = async (req, res, next) => {
@@ -21,7 +21,7 @@ const validateTodo = async (req, res, next) => {
 };
 
 const validateTodoIdParams = (req, res, next) => {
-  if(!ObjectID.isValid(req.params.id)) return res.status(400).send({ message: 'Invalid todo id'});
+  if(!ObjectID.isValid(req.params.id)) return res.status(400).send({ message: 'Invalid id'});
   next();
 };
 
@@ -32,7 +32,7 @@ const isAdmin = async (req, res, next) => {
     next();
   }
   catch(err) {
-    res.status(401).send(err);
+    res.status(401).send({error: { message: err.message }});
   }
 };
 
@@ -46,6 +46,8 @@ const validateKey = async (req, res, next) => {
     next()
   }
   catch(err) {
+    // save all error messages to .error.log
+     saveLog(err);
     if(err.details) return res.status(400).send(formatError(err));
     
     res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
