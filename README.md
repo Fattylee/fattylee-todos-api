@@ -72,6 +72,14 @@ DELETE /users/id  delete a user
 ```
 
 ```js
+PATCH /users/admin/id  	add admin priviledge to a user
+```
+
+```js
+DELETE /users/admin/id  delete admin priviledge from a user
+```
+
+```js
 GET /users/auth  get auth user
 ```
  

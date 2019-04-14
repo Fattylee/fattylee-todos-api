@@ -104,18 +104,6 @@ describe('GET /todos/:id', () => {
           .catch(err => done(err));
   }); // end it
   
-  it('should return 400 for invalid id: GET /todos/123', done => {
-    request(app)
-      .get('/todos/123')
-      .set('x-auth', token)
-      .expect(400)
-      .end((err, res) => {
-        if(err) return done(err);
-          expect(res.body.message).toBe('Invalid id');
-        done();
-      });
-  }); //end it
-  
   it('should return 404 for todo not in the db: GET /todos/validID', done => {
     const validID = new ObjectID().toString();
     request(app)
@@ -188,20 +176,6 @@ describe('DELETE /todos/id', () => {
           done();
         });
     }); // end it
-    
-    it('should not delete a todo with invalidID: DELETE /todos/id', (done) => {
-      request(app)
-        .delete('/todos/123')
-        .set('x-auth', token)
-        .expect(400)
-        .end((err, res) => {
-          if(err) return done(err);
-          
-          expect(res.body.message).toBe('Invalid id');
-          done();
-        });
-    }); // end it
-    
     it('should not delete a todo for a todo not in the db: DELETE /todos/id', (done) => {
       const _id = new ObjectID();
       request(app)
@@ -251,19 +225,6 @@ describe('PATCH /todos/id', () => {
           done();
         });
     }); // end it
-    
-    it('should return 400 for invalid todoId: PATCH /todos/123', (done) => {
-      request(app)
-        .patch('/todos/123')
-        .set('x-auth', token)
-        .expect(400)
-        .then(res => {
-          expect(res.body.message).toContain('Invalid');
-          done();
-        })
-        .catch( err => done(err));
-    }); // end it
-    
     it('should return 404 for todoId that is not in the db: PATCH /todos/id', (done) => {
       request(app)
         .patch('/todos/' + new ObjectID().toHexString())
@@ -339,25 +300,27 @@ describe('GET /users', () => {
     
 }); // end GET /users
 
-
 describe('DELETE /users', () => {
   const [{tokens: [{token}]}] = userPayload;
-  it('should delete all users in the db', (done) => {
+  it('should delete all users without admin priviledge in the db', (done) => {
     request(app)
       .delete('/users')
       .send({ key: process.env.SUPER_USER_KEY })
       .set('x-auth', token)
       .expect(200)
-      .expect(async res => {
-        const users = await User.find().catch(done);
-        expect(users.length).toBe(1);
-        const todos = await Todo.find().catch(done);
-        expect(todos.length).toBe(2);
-      })
       .end((err, res) => {
         if(err) return done(err);
-        expect(res.body.message).toBe('all non-admin users deleted');
+        User.find()
+        .then( users => {
+          expect(users.length).toBe(1);
+          return Todo.find();
+        })
+        .then( todos => {
+          expect(todos.length).toBe(2);
+          expect(res.body.message).toBe('all non-admin users deleted');
           done();
+        })
+        .catch(done);
         });
     }); // end it
     it('should not delete users in the db if key is not supplied', (done) => {
@@ -398,6 +361,128 @@ describe('DELETE /users', () => {
     }); // end it
     
 }); // end DELETE /users
+
+describe('DELETE /users/id', () => {
+  const [{tokens: [{token}]}, {_id}] = userPayload;
+  it('should delete a user in the db', (done) => {
+    request(app)
+      .delete('/users/' + _id)
+      .send({ key: process.env.SUPER_USER_KEY })
+      .set('x-auth', token)
+      .expect(200)
+      .end((err, res) => {
+        if(err) return done(err);
+        User.find().then( users => {
+          expect(users.length).toBe(2);
+          Todo.find().then( todos => {
+          expect(todos.length).toBe(2);
+          expect(res.body.message).toBe('user deleted');
+          done();
+        }).catch(done);
+        }).catch(done);
+        });
+    }); // end it
+    it('should return 404 for user not in the db', (done) => {
+    request(app)
+      .delete('/users/' + new ObjectID())
+      .send({ key: process.env.SUPER_USER_KEY })
+      .set('x-auth', token)
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toEqual('user not found');
+          done();
+        });
+    }); // end it
+}); // end DELETE /users/id
+
+describe('PATCH /users/admin/id', () => {
+  const [{tokens: [{token}]}, { _id }] = userPayload;
+  it('should upgrade a user priviledge to admin', (done) => {
+    request(app)
+      .patch('/users/admin/' + _id)
+      .set('x-auth', token)
+      .expect(200)
+      .expect(async res => {
+        const users = await User.find().catch(done);
+        expect(users[1].isAdmin).toBeTruthy();
+      })
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.message).toBe('user upgraded to admin');
+          done();
+        });
+    }); // end it
+    it('should return 404 for user not in the db', (done) => {
+    request(app)
+      .patch('/users/admin/' + new ObjectID())
+      .set('x-auth', token)
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toBe('user not found');
+          done();
+        });
+    }); // end it
+    it('should return 403 for a user that is already an admin', (done) => {
+      const [{ _id }] = userPayload;
+    request(app)
+      .patch('/users/admin/' + _id)
+      .set('x-auth', token)
+      .expect(403)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toBe('already an admin');
+          done();
+        });
+    }); // end it
+}); // end PATCH /users/admin/id 
+
+describe('DELETE /users/admin/id', () => {
+  const [{tokens: [{token}]}] = userPayload;
+  it('should remove admin priviledge from a user', (done) => {
+    const [{ _id }] = userPayload;
+    request(app)
+      .delete('/users/admin/' + _id)
+      .set('x-auth', token)
+      .expect(200)
+      .end((err, res) => {
+        if(err) return done(err);
+        
+        expect(res.body.message).toBe('admin priviledge removed successfully');
+        User.find()
+          .then( users => {
+            expect(users[0].isAdmin).toBeFalsy();
+            done();
+          })
+          .catch(done);
+        });
+    }); // end it
+    
+    it('should return 404 for user not in the db', (done) => {
+    request(app)
+      .delete('/users/admin/' + new ObjectID())
+      .set('x-auth', token)
+      .expect(404)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toBe('user not found');
+          done();
+        });
+    }); // end it
+    it('should return 403 for a user that is not an admin', (done) => {
+      const [, { _id }] = userPayload;
+    request(app)
+      .delete('/users/admin/' + _id)
+      .set('x-auth', token)
+      .expect(403)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body.error.message).toBe('already a user without admin priviledge');
+          done();
+        });
+    }); // end it 
+}); // end PATCH /users/admin/id 
 
 describe('POST /users', () => {
    it('should create a user: POST /users', (done) => {
@@ -676,6 +761,62 @@ describe('Test authenticated middleware', () => {
       .end(done);
   }); // end it
 }); // end /users/auth
+
+describe('Test validateTodoIdParams middleware', () => {
+  const [{tokens: [{token}]}] = userPayload;
+  it('should return 400 for invalid id: GET /todos/123', done => {
+    request(app)
+      .get('/todos/123')
+      .set('x-auth', token)
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('Invalid id');
+        done();
+      });
+  }); //end it
+}); // end validateTodoIdParams middleware
+
+describe('Test validateKey middleware', () => {
+  const [{tokens: [{token}]}] = userPayload;
+  it('should return 400 for empty payload', done => {
+    request(app)
+      .delete('/users/')
+      .set('x-auth', token)
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('Invalid input');
+          expect(res.body.error[0].message).toBe('"key" is required')
+        done();
+      });
+  }); //end it
+  it('should return 400 for invalid key type', done => {
+    request(app)
+      .delete('/users/')
+      .set('x-auth', token)
+      .send({key: 45})
+      .expect(400)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.message).toBe('Invalid input');
+          expect(res.body.error[0].message).toBe('"key" must be a string')
+        done();
+      });
+  }); //end it
+    it('should return 401 for invalid key', done => {
+    request(app)
+      .delete('/users/')
+      .set('x-auth', token)
+      .send({key: 'ywywyw'})
+      .expect(401)
+      .end((err, res) => {
+        if(err) return done(err);
+          expect(res.body.error.message).toBe('Invalid key');
+        done();
+      });
+  }); //end it
+}); // end validateKey middleware
 
 //logout route
 describe('DELETE /users/auth/token', () => {

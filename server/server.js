@@ -194,6 +194,45 @@ app.delete('/users/:id', authenticated, isAdmin, validateTodoIdParams, validateK
   }
 });
 
+
+app.patch('/users/admin/:id', authenticated, isAdmin, validateTodoIdParams, async (req, res) => {
+  
+  try {
+    const { id: _id } = req.params;
+    
+    const user = await User.findOne({ _id, }).catch( err => { throw err });
+    
+    if(!user) throw { statusCode: 404, message: 'user not found'};
+    if(user.isAdmin) throw { statusCode: 403, message: 'already an admin'}
+    user.isAdmin = true;
+    await user.save().catch( err => { throw err });
+    
+    res.status(200).send({ message: 'user upgraded to admin' });
+  }
+  catch(err) {
+    res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
+  }
+});
+
+app.delete('/users/admin/:id', authenticated, isAdmin, validateTodoIdParams, async (req, res) => {
+  
+  try {
+    const { id: _id } = req.params;
+    
+    const user = await User.findOne({ _id, }).catch( err => { throw err });
+    
+    if(!user) throw { statusCode: 404, message: 'user not found'};
+    if(!user.isAdmin) throw { statusCode: 403, message: 'already a user without admin priviledge'}
+    user.isAdmin = false;
+    await user.save().catch( err => { throw err });
+    
+    res.status(200).send({ message: 'admin priviledge removed successfully' });
+  }
+  catch(err) {
+    res.status(err.statusCode || 500).send({ error: { message: err.message || err }});
+  }
+});
+
 app.post('/users', async (req, res) => {
   try {
     const value = await validateUser(req.body).catch( err => { throw err });

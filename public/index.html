@@ -76,11 +76,12 @@ span.animated { animation-delay: 7s }
   	app.get('/todos/admin',
   	<li><span class="animated infinite shake slower">DELETE /users</span>  delete all users</li>
   		<li><span class="animated infinite jello slower">DELETE /users/userId</span>  delete a user</li>
+  		 	<li><span class="animated infinite rubberBand">PATCH /users/admin/id</span>	add admin priviledge to a user</li>
+  	<li><span class="animated infinite heartBeat">DELETE /users/admin/id</span> delete admin priviledge from a user</li>
   	<li><span class="animated infinite heartBeat">POST /todos</span> create a todo</li>
   	<li><span class="animated infinite wobble slower">PATCH /todos/todoId</span> update a todo</li>
   	<li><span class="animated infinite tada">GET /users</span>	get all users</li>
   	<li><span class="animated infinite flash">POST /users</span> create a user</li>
-  		<li><span class="animated infinite heartBeat">DELETE /users</span>	delete all users</li>
   	<li><span class="animated infinite slow shake">GET /users/auth</span> get auth user (requires a valid token) </li>
   	<li><span class="animated infinite rubberBand">POST /users/login</span>	user login</li>
   	<li><span class="animated infinite heartBeat">DELETE /users/auth/token</span> logout a user</li>
