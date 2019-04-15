@@ -546,9 +546,7 @@ describe('POST /users', () => {
       .send({email, password})
       .expect(409)
       .then(async (res) => {
-        
-          expect(res.body.error).toBe('email already exist');
-        expect(res.body.error).toBeTruthy();
+        expect(res.body.error.message).toBe('email already exist');
         const users = await User.find().catch(console.error);
         expect(users.length).toBe(3);     
         done();
