@@ -4,10 +4,10 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
-    "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec mocha --reporter=spec ./server/test/server.test.js ",
+    "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec mocha --reporter=spec ./server/test/server.test.js",
     "test:circleci": "export NODE_ENV=staging || SET \"NODE_ENV=staging\" && mocha --reporter=spec -t 10000 ./server/test/server.test.js ",
     "start:server": "nodemon server/server.js -e js,html,css",
-    "test:build": "mocha --reporter=spec -t 10000 ./server/test/server.test.js ",
+    "test:build": "mocha --reporter=spec -t 10000 ./server/test/server.test.js --exit",
     "start:server": "nodemon server/server.js -e js,html,css",
     "start": "node server/server.js"
   },
