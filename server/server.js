@@ -256,7 +256,7 @@ app.post('/users', async (req, res) => {
     
       if(err.details) return res.status(400).send(formatError(err));
       
-    res.status(err.statusCode || 500 ).send({error: err.message || err });
+    res.status(err.statusCode || 500 ).send({error: {message: err.message || err }});
     }
 }); // end post /users
 
