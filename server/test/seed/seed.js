@@ -8,6 +8,7 @@ const { format } = require('../../../helpers/utils');
 const _id = new ObjectID();
 const id2 = new ObjectID();
 const id3 = new ObjectID();
+const id4 = new ObjectID();
 const access = 'auth';
 const plainPassword = 'password1';
 const plainPassword2 = 'password2';
@@ -41,6 +42,18 @@ const userPayload = [
   tokens: [{
     access,
     token: jwt.sign({_id: id3, access }, process.env.JWT_SECRETE),
+    _id: new ObjectID(),
+    }]  
+  },
+  {
+  __v: 0,
+  email: 'fatty@gmail.com',
+  password: bcrypt.hashSync(plainPassword3, 10),
+  _id: id4,
+  isAdmin: true,
+  tokens: [{
+    access,
+    token: jwt.sign({_id: id4, access }, process.env.JWT_SECRETE),
     _id: new ObjectID(),
     }]  
   },

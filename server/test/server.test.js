@@ -293,7 +293,7 @@ describe('GET /users', () => {
         .expect(200)
         .set('x-auth', token)
         .expect((res) => {
-          expect(res.body.users.length).toBe(3);
+          expect(res.body.users.length).toBe(4);
         })
         .end(done);
     }); // end it
@@ -312,7 +312,7 @@ describe('DELETE /users', () => {
         if(err) return done(err);
         User.find()
         .then( users => {
-          expect(users.length).toBe(1);
+          expect(users.length).toBe(2);
           return Todo.find();
         })
         .then( todos => {
@@ -373,7 +373,7 @@ describe('DELETE /users/id', () => {
       .end((err, res) => {
         if(err) return done(err);
         User.find().then( users => {
-          expect(users.length).toBe(2);
+          expect(users.length).toBe(3);
           Todo.find().then( todos => {
           expect(todos.length).toBe(2);
           expect(res.body.message).toBe('user deleted');
@@ -441,7 +441,7 @@ describe('PATCH /users/admin/id', () => {
 describe('DELETE /users/admin/id', () => {
   const [{tokens: [{token}]}] = userPayload;
   it('should remove admin priviledge from a user', (done) => {
-    const [{ _id }] = userPayload;
+    const [ , , , { _id }] = userPayload;
     request(app)
       .delete('/users/admin/' + _id)
       .set('x-auth', token)
@@ -452,13 +452,12 @@ describe('DELETE /users/admin/id', () => {
         expect(res.body.message).toBe('admin priviledge removed successfully');
         User.find()
           .then( users => {
-            expect(users[0].isAdmin).toBeFalsy();
+            expect(users[3].isAdmin).toBeFalsy();
             done();
           })
           .catch(done);
         });
     }); // end it
-    
     it('should return 404 for user not in the db', (done) => {
     request(app)
       .delete('/users/admin/' + new ObjectID())
@@ -481,8 +480,20 @@ describe('DELETE /users/admin/id', () => {
         expect(res.body.error.message).toBe('already a user without admin priviledge');
           done();
         });
-    }); // end it 
-}); // end PATCH /users/admin/id 
+    }); // end it
+    it('should return 403 if an admin wants to remove it own admin priviledge ', (done) => {
+    const [{_id, tokens: [{token}]}] = userPayload;
+    request(app)
+      .delete('/users/admin/' + _id)
+      .set('x-auth', token)
+      .expect(403)
+      .then(async (res) => {
+        expect(res.body.error.message).toBe('requires another admin to remove admin priviledge');   
+        done();
+      })
+      .catch(done);
+  }); // End it
+}); // end DELETE /users/admin/id 
 
 describe('POST /users', () => {
    it('should create a user: POST /users', (done) => {
@@ -498,7 +509,7 @@ describe('POST /users', () => {
        
        expect(res.header['x-auth']).toBeTruthy(); expect(res.body.user.email).toBe('lakers@yahoo.com');
        User.find().then(data => {
-         expect(data.length).toBe(4);
+         expect(data.length).toBe(5);
        expect(data[2].password).not.toBe(payload.password);
        done();
        }).catch( err => done(err));
@@ -516,11 +527,11 @@ describe('POST /users', () => {
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error.length).toBe(2);
         const users = await User.find().catch(done);
-        expect(users.length).toBe(3);
+        expect(users.length).toBe(4);
         done();
       });
   }); // End it
-  it('should not create a new user when email is invalid', async () => {
+  it('should not create a new user when email is invalid', (done) => {
     const payload = { 
     email: 'abcgmail.com',
     password: '1235gsvs',
@@ -530,13 +541,14 @@ describe('POST /users', () => {
       .send(payload)
       .expect(400)
       .end(async (err, res) => {
-        if(err) return console.error(err);
+        if(err) return done(err);
         
         expect(res.body.message).toBe('Invalid input');
         expect(res.body.error[0].message).toMatch('must be a valid email')
         expect(res.body.error.length).toBe(1);
         const count = await User.countDocuments().catch(console.error);
-        expect(count).toBe(3);
+        expect(count).toBe(4);
+        done();
       });
   }); // End it
   it('should not create a new user when email already exist', (done) => {
@@ -548,12 +560,12 @@ describe('POST /users', () => {
       .then(async (res) => {
         expect(res.body.error.message).toBe('email already exist');
         const users = await User.find().catch(console.error);
-        expect(users.length).toBe(3);     
+        expect(users.length).toBe(4);     
         done();
       })
       .catch(done);
   }); // End it
-   
+  
 }); // End POST /users 
 
 describe('AUTH Route: GET /users/auth', () => {

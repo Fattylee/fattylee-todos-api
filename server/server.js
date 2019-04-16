@@ -223,6 +223,8 @@ app.delete('/users/admin/:id', authenticated, isAdmin, validateTodoIdParams, asy
     
     if(!user) throw { statusCode: 404, message: 'user not found'};
     if(!user.isAdmin) throw { statusCode: 403, message: 'already a user without admin priviledge'}
+    if(_id === req.user._id.toString()) throw { statusCode: 403, message: 'requires another admin to remove admin priviledge' }
+    
     user.isAdmin = false;
     await user.save().catch( err => { throw err });
     
