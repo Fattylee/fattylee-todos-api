@@ -1,7 +1,6 @@
-require("./config/config");
+const env = require("./config/config");
 
 const express = require("express");
-const bodyParser = require("body-parser");
 const fs = require("fs");
 const Joi = require("joi");
 const { ObjectID } = require("mongodb");
@@ -17,24 +16,24 @@ const {
   formatError,
   validateUser,
   format,
-  saveLog
+  saveLog,
 } = require("./../helpers/utils");
 const { authenticated } = require("./middleware/authenticated");
 const {
   validateTodo,
   validateTodoIdParams,
   isAdmin,
-  validateKey
+  validateKey,
 } = require("./middleware/validators");
 const bcrypt = require("bcryptjs");
 
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-if (require("./config/config") === "development") app.use(logger);
+if (env === "development") app.use(logger);
 
 /*
 app.use('/', (req, res, next) => {
@@ -74,7 +73,7 @@ app.get("/todos/:id", authenticated, validateTodoIdParams, async (req, res) => {
     const { id } = req.params;
 
     const todo = await Todo.findOne({ _id: id, _owner: req.user._id }).catch(
-      err => {
+      (err) => {
         throw err;
       }
     );
@@ -96,8 +95,8 @@ app.post("/todos", authenticated, validateTodo, async (req, res) => {
   try {
     const doc = await Todo.insertMany({
       text: req.payload.text,
-      _owner: req.user._id
-    }).catch(err => {
+      _owner: req.user._id,
+    }).catch((err) => {
       throw err;
     });
 
@@ -121,8 +120,8 @@ app.delete(
       const { id } = req.params;
       const doc = await Todo.findOneAndDelete({
         _id: id,
-        _owner: req.user._id
-      }).catch(err => {
+        _owner: req.user._id,
+      }).catch((err) => {
         throw err;
       });
       if (!doc) throw { statusCode: 404, message: "Todo not found" };
@@ -140,7 +139,7 @@ app.delete(
 
 app.delete("/todos/", authenticated, async (req, res) => {
   try {
-    const doc = await Todo.deleteMany({ _owner: req.user._id }).catch(err => {
+    const doc = await Todo.deleteMany({ _owner: req.user._id }).catch((err) => {
       throw err;
     });
 
@@ -161,7 +160,7 @@ app.patch(
   validateTodoIdParams,
   async (req, res) => {
     try {
-      let value = await validateTodoUpdate(req.body).catch(err => {
+      let value = await validateTodoUpdate(req.body).catch((err) => {
         throw err;
       });
 
@@ -173,7 +172,7 @@ app.patch(
         { _id: id, _owner: req.user._id },
         value,
         { useFindAndModify: false, new: true }
-      ).catch(err => {
+      ).catch((err) => {
         throw err;
       });
 
@@ -188,8 +187,8 @@ app.patch(
 
       res.status(err.statusCode || 500).send({
         error: {
-          message: err.message || err
-        }
+          message: err.message || err,
+        },
       });
     }
   }
@@ -207,14 +206,14 @@ app.get("/users", authenticated, isAdmin, async (req, res) => {
 
 app.delete("/users", authenticated, isAdmin, validateKey, async (req, res) => {
   try {
-    const users = await User.find({ isAdmin: true }).catch(err => {
+    const users = await User.find({ isAdmin: true }).catch((err) => {
       throw err;
     });
-    const ids = users.map(user => user._id);
+    const ids = users.map((user) => user._id);
     await Promise.all([
       User.deleteMany({ isAdmin: false }),
-      Todo.deleteMany({ _owner: { $nin: ids } })
-    ]).catch(err => {
+      Todo.deleteMany({ _owner: { $nin: ids } }),
+    ]).catch((err) => {
       throw err;
     });
 
@@ -235,11 +234,11 @@ app.delete(
   async (req, res) => {
     try {
       const { id: _id } = req.params;
-      const user = await User.findOneAndDelete({ _id }).catch(err => {
+      const user = await User.findOneAndDelete({ _id }).catch((err) => {
         throw err;
       });
       if (!user) throw { statusCode: 404, message: "user not found" };
-      const todos = await Todo.deleteMany({ _owner: _id }).catch(err => {
+      const todos = await Todo.deleteMany({ _owner: _id }).catch((err) => {
         throw err;
       });
 
@@ -261,14 +260,14 @@ app.patch(
     try {
       const { id: _id } = req.params;
 
-      const user = await User.findOne({ _id }).catch(err => {
+      const user = await User.findOne({ _id }).catch((err) => {
         throw err;
       });
 
       if (!user) throw { statusCode: 404, message: "user not found" };
       if (user.isAdmin) throw { statusCode: 403, message: "already an admin" };
       user.isAdmin = true;
-      await user.save().catch(err => {
+      await user.save().catch((err) => {
         throw err;
       });
 
@@ -290,7 +289,7 @@ app.delete(
     try {
       const { id: _id } = req.params;
 
-      const user = await User.findOne({ _id }).catch(err => {
+      const user = await User.findOne({ _id }).catch((err) => {
         throw err;
       });
 
@@ -298,16 +297,16 @@ app.delete(
       if (!user.isAdmin)
         throw {
           statusCode: 403,
-          message: "already a user without admin priviledge"
+          message: "already a user without admin priviledge",
         };
       if (_id === req.user._id.toString())
         throw {
           statusCode: 403,
-          message: "requires another admin to remove admin priviledge"
+          message: "requires another admin to remove admin priviledge",
         };
 
       user.isAdmin = false;
-      await user.save().catch(err => {
+      await user.save().catch((err) => {
         throw err;
       });
 
@@ -324,24 +323,24 @@ app.delete(
 
 app.post("/users", async (req, res) => {
   try {
-    const value = await validateUser(req.body).catch(err => {
+    const value = await validateUser(req.body).catch((err) => {
       throw err;
     });
 
     const { email } = value;
     const user = new User(value);
 
-    const emailExist = await User.findOne({ email }).catch(err => {
+    const emailExist = await User.findOne({ email }).catch((err) => {
       throw err;
     });
 
     if (emailExist) throw { message: "email already exist", statusCode: 409 };
 
-    await user.save().catch(err => {
+    await user.save().catch((err) => {
       throw err;
     });
 
-    const token = await user.generateAuthToken().catch(err => {
+    const token = await user.generateAuthToken().catch((err) => {
       throw err;
     });
 
@@ -368,14 +367,14 @@ app.get("/users/auth", authenticated, (req, res) => {
 
 app.post("/users/login", async (req, res) => {
   try {
-    const payload = await validateUser(req.body).catch(err => {
+    const payload = await validateUser(req.body).catch((err) => {
       throw err;
     });
-    const validUser = await User.findByCredentials(payload).catch(err => {
+    const validUser = await User.findByCredentials(payload).catch((err) => {
       throw err;
     });
 
-    const token = await validUser.generateAuthToken().catch(err => {
+    const token = await validUser.generateAuthToken().catch((err) => {
       throw err;
     });
 
@@ -395,12 +394,14 @@ app.post("/users/login", async (req, res) => {
 // remove a token aka logout
 app.delete("/users/auth/token", authenticated, async (req, res) => {
   try {
-    const user = await req.user.removeToken(req.header("x-auth")).catch(err => {
-      throw err;
-    });
+    const user = await req.user
+      .removeToken(req.header("x-auth"))
+      .catch((err) => {
+        throw err;
+      });
 
     res.status(200).send({
-      message: "logout was successful"
+      message: "logout was successful",
     });
   } catch (err) {
     // save all error messages to .error.log
