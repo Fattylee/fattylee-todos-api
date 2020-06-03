@@ -4,3 +4,4 @@ gitcheatsheet.txt
 .error.log
 playground/bash-cheatsheet.txt
 server/config/config.json
+*.swp
