@@ -8,11 +8,10 @@
     "test:circleci": "export NODE_ENV=staging || SET \"NODE_ENV=staging\" && mocha --reporter=spec -t 10000 ./server/test/server.test.js ",
     "start:server": "nodemon server/server.js -e js,html,css",
     "test:build": "mocha --reporter=spec -t 10000 ./server/test/server.test.js --exit",
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "test:playground": "nodemon --exec 'mocha playground/**/*.test.js'"
   },
-  "engines": {
-    "node": "11.12.0"
-  },
+  "engines": {},
   "dependencies": {
     "animate.css": "3.7.0",
     "bcryptjs": "2.4.3",
@@ -30,11 +29,13 @@
     "validator": "10.11.0"
   },
   "devDependencies": {
-    "nodemon": "1.18.10",
+    "babel-register": "6.26.0",
+    "expect": "^26.0.1",
+    "jest": "^26.0.1",
     "mocha": "6.0.2",
-    "expect": "24.3.0",
-    "supertest": "4.0.2",
-    "babel-register": "6.26.0"
+    "nodemon": "1.18.10",
+    "sinon": "^9.0.2",
+    "supertest": "4.0.2"
   },
   "keywords": [],
   "author": "",
