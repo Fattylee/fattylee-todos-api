@@ -84,75 +84,25 @@ $ npm run start:dev
 - run test using `npm test`
 
 ## API Docs 
-
-<table>
-<tr><th>HTTP VERB</th><th>ENDPOINT</th><th>FUNCTIONALITY</th></tr>
-
-<tr><td>POST</td> <td>api/v1/users/auth/signup</td>  <td>Register a user</td></tr>
-
-
-path:
-
- `./servers/server.js`
- 
  ```js
  Get /  home page for Api Docs
  ```
- 
- <tr><td>GET</td> <td>api/v1/todos/todoID</td>  <td>Get a todo by ID</td></tr>
- 
- ```js
- GET /todos  get all todos
- ```
- 
-```js
-POST /todos  create a todo
-```
 
-```js
-DELETE /todos/id  delete a todo
-```
-
-```js
-DELETE /todos  delete all todo
-```
- 
-```js
-GET /users  get all users 
-```
- 
-```js
-POST /users  create a user
-```
-
-```js
-GET /todos/admin  get all todos
-```
-
-```js
-DELETE /users  delete all users 
-```
-
-```js
-DELETE /users/id  delete a user
-```
-
-```js
-PATCH /users/admin/id  	add admin priviledge to a user
-```
-
-```js
-DELETE /users/admin/id  delete admin priviledge from a user
-```
-
-```js
-GET /users/auth  get auth user
-```
- 
-```js
-POST /users/login  user login
-```
-
-```js
-DELETE /users/auth/token  logout a user 
-```
+<table>
+<tr><th>HTTP VERB</th><th>ENDPOINT</th><th>FUNCTIONALITY</th></tr>
+<tr><td>GET</td><td>todos</td><td>Get all todos that belongs to user</td></tr>
+<tr><td>GET</td><td>/todos/todoID</td><td>Get a todo by ID</td></tr>
+<tr><td>POST</td><td>/todos</td><td>Create a todo</td></tr>
+<tr><td>DELETE</td><td>/todos/id</td><td>Delete a todo</td></tr>
+<tr><td>DELETE</td><td>/todos</td><td>Delete all todos</td></tr>
+<tr><td>GET</td><td>/users</td><td>Get all users</td></tr>
+<tr><td>POST</td><td>/users</td><td>Create a user</td></tr>
+<tr><td>GET</td><td>todos/admin</td><td>Get all todos</td></tr>
+<tr><td>DELETE</td><td>/users</td><td>Delete all users</td></tr>
+<tr><td>DELETE</td><td>/users/id</td><td>Delete a user</td></tr>
+<tr><td>PATCH</td><td>/users/admin/id</td><td>Add admin priviledge a user</td></tr>
+<tr><td>DELETE</td><td>/users/admin/id</td><td>Revoke admin priviledge from a user</td></tr>
+<tr><td>GET</td><td>/users/auth</td><td>Get auth user</td></tr>
+<tr><td>POST</td><td>/users/login</td><td>User login</td></tr> 
+<tr><td>DELETE</td><td>/users/auth/token</td><td>Logout user</td></tr>
+</table>
